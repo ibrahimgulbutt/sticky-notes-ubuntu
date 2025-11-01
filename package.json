@@ -1,0 +1,118 @@
+{
+  "name": "sticky-notes-electron",
+  "version": "1.0.0",
+  "description": "A minimal, beautiful sticky notes app for Ubuntu with matte dark theme and cyan accents",
+  "main": "dist/main/main-new.js",
+  "author": {
+    "name": "Ibrahim Butt",
+    "email": "ibrahim@example.com"
+  },
+  "license": "MIT",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
+    "dev:main": "tsc -p tsconfig.main.json -w",
+    "dev:renderer": "vite dev",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:linux": "electron-builder --linux",
+    "clean": "rimraf dist",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.0.4",
+    "autoprefixer": "^10.4.15",
+    "concurrently": "^8.2.0",
+    "electron": "^26.0.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.28",
+    "rimraf": "^5.0.1",
+    "sharp": "^0.34.4",
+    "tailwindcss": "^3.3.3",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.9"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.1.8",
+    "@tiptap/extension-bold": "^2.1.8",
+    "@tiptap/extension-bullet-list": "^2.1.8",
+    "@tiptap/extension-document": "^2.1.8",
+    "@tiptap/extension-hard-break": "^2.1.8",
+    "@tiptap/extension-history": "^2.1.8",
+    "@tiptap/extension-italic": "^2.1.8",
+    "@tiptap/extension-list-item": "^2.1.8",
+    "@tiptap/extension-ordered-list": "^2.1.8",
+    "@tiptap/extension-paragraph": "^2.1.8",
+    "@tiptap/extension-strike": "^2.1.8",
+    "@tiptap/extension-task-item": "^2.1.8",
+    "@tiptap/extension-task-list": "^2.1.8",
+    "@tiptap/extension-text": "^2.1.8",
+    "@tiptap/extension-underline": "^2.1.8",
+    "@tiptap/react": "^2.1.8",
+    "@tiptap/starter-kit": "^3.4.5",
+    "electron-store": "^8.1.0",
+    "lucide-react": "^0.264.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "uuid": "^9.0.0"
+  },
+  "build": {
+    "appId": "com.stickynotes.app",
+    "productName": "Sticky Notes",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "assets",
+        "filter": ["**/*"]
+      }
+    ],
+    "linux": {
+      "target": [
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Utility",
+      "icon": "src/assets/icon.png",
+      "desktop": {
+        "Name": "Sticky Notes",
+        "Comment": "Beautiful sticky notes for your desktop",
+        "Keywords": "notes;todo;sticky;desktop;",
+        "StartupWMClass": "sticky-notes-electron"
+      }
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "src/assets/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "src/assets/icon.png"
+    },
+    "snap": {
+      "grade": "stable",
+      "confinement": "strict"
+    }
+  }
+}

@@ -1,0 +1,113 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+out/
+
+# Release builds
+release/
+*.deb
+*.AppImage
+*.dmg
+*.exe
+*.msi
+*.snap
+*.tar.gz
+
+# Electron
+app/
+electron-builder-effective-config.yaml
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor backup files
+*~
+*.tmp
+*.bak
+*.swp
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Webpack
+.webpack/
+
+# Electron-forge
+.forge/
+
+# Auto-generated files
+*.auto.js
+*.auto.ts
+
+# Custom build scripts output
+build-and-test.sh
+*.sh
+
+# Local configuration files
+config.local.*
+
+# Development database files
+*.db
+*.sqlite
+*.sqlite3

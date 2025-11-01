@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0B0C0D;
+  --bg-card: #111214;
+  --color-accent: #00E5FF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
+  --text-muted: #808080;
+}
+
+body {
+  font-family: Inter, Roboto, system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  margin: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.5);
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.7);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(0, 229, 255, 0.5) rgba(255, 255, 255, 0.08);
+}
+
+/* Note window border */
+.note-window-border {
+  border: 1px solid rgba(0, 229, 255, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.1);
+}
+
+/* Allow checkbox interaction even when locked */
+.ProseMirror.locked input[type="checkbox"] {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.ProseMirror.locked ul[data-type="taskList"] li > label {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+  padding: 0.5rem;
+  height: 100%;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.ProseMirror p {
+  margin: 0.25em 0;
+}
+
+.ProseMirror ul, .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.5em 0;
+}
+
+.ProseMirror li {
+  margin: 0.25em 0;
+}
+
+.ProseMirror strong {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.ProseMirror em {
+  font-style: italic;
+}
+
+.ProseMirror s {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.ProseMirror u {
+  text-decoration: underline;
+}
+
+/* Task list styles */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  margin: 0.25em 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
+  user-select: none;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+  accent-color: var(--color-accent);
+}
+
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-muted);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Focus styles */
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-in;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Window dragging */
+.drag-handle {
+  -webkit-app-region: drag;
+  cursor: move;
+}
+
+.drag-handle button,
+.drag-handle input,
+.drag-handle select {
+  -webkit-app-region: no-drag;
+  cursor: default;
+}
+
+/* Ensure interactive elements in drag areas work */
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

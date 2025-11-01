@@ -1,0 +1,432 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+import { 
+  Plus, 
+  Search, 
+  Settings, 
+  X,
+  Pin,
+  Lock,
+  MoreVertical,
+  FileText,
+  Tag,
+  Calendar,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+import type { Note, Settings as AppSettings } from '../types';
+import './styles.css';
+
+// Utility function for date formatting
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+}
+
+const DashboardApp: React.FC = () => {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated');
+  const [isScrollable, setIsScrollable] = useState(false);
+
+  const loadNotes = useCallback(async () => {
+    const allNotes = await window.electronAPI.getAllNotes();
+    setNotes(allNotes);
+  }, []);
+
+  const loadSettings = useCallback(async () => {
+    const appSettings = await window.electronAPI.getSettings();
+    setSettings(appSettings);
+  }, []);
+
+  useEffect(() => {
+    loadNotes();
+    loadSettings();
+  }, [loadNotes, loadSettings]);
+
+  // Filter and search notes
+  useEffect(() => {
+    let filtered = notes;
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(note => 
+        note.title.toLowerCase().includes(query) ||
+        note.body.toLowerCase().includes(query) ||
+        note.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply tag filter
+    if (selectedTag) {
+      filtered = filtered.filter(note => note.tags.includes(selectedTag));
+    }
+
+    // Sort notes
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'created':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'updated':
+        default:
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+    });
+
+    setFilteredNotes(filtered);
+  }, [notes, searchQuery, selectedTag, sortBy]);
+
+  const createNewNote = async (pinned = false) => {
+    // Check if there's already an empty note
+    const emptyNote = notes.find(note => 
+      (!note.title || note.title.trim() === '' || note.title === 'New Note') && 
+      (!note.body || note.body.trim() === '' || note.body === '<p></p>' || note.body === '<p><br></p>')
+    );
+    
+    if (emptyNote) {
+      // Open the existing empty note instead of creating a new one
+      await window.electronAPI.createNoteWindow(emptyNote.id);
+      return;
+    }
+    
+    // Create new note only if no empty note exists
+    const newNote = await window.electronAPI.createNote({ pinned });
+    await window.electronAPI.createNoteWindow(newNote.id);
+    await loadNotes();
+  };
+
+  const openNote = async (noteId: string) => {
+    // This will now check if window is already open and focus it instead of creating new one
+    await window.electronAPI.createNoteWindow(noteId);
+  };
+
+  const deleteNote = async (noteId: string) => {
+    await window.electronAPI.deleteNote(noteId);
+    await loadNotes();
+  };
+
+  const toggleNotePin = async (noteId: string) => {
+    const note = notes.find(n => n.id === noteId);
+    if (note) {
+      await window.electronAPI.updateNote(noteId, { pinned: !note.pinned });
+      await loadNotes();
+    }
+  };
+
+  const getAllTags = () => {
+    const tagSet = new Set<string>();
+    notes.forEach(note => {
+      note.tags.forEach(tag => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  };
+
+  const handleCloseWindow = () => {
+    window.close();
+  };
+
+  const handleOpenSettings = async () => {
+    await window.electronAPI.openSettings();
+  };
+
+  const exportNotes = async () => {
+    try {
+      await window.electronAPI.exportNotes('json');
+      alert('Notes exported successfully! Check your Downloads folder for the JSON file.');
+    } catch (error) {
+      alert('Export failed: ' + error);
+    }
+  };
+
+  const importNotes = async () => {
+    try {
+      await window.electronAPI.importNotes();
+      await loadNotes();
+      alert('Notes imported successfully! Your imported notes should now appear in the list.');
+    } catch (error) {
+      alert('Import failed: ' + error);
+    }
+  };
+
+  const allTags = getAllTags();
+
+  return (
+    <div className="w-full h-full bg-matte-dark text-text-primary flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-matte-border">
+        <h1 className="text-lg font-semibold text-text-primary">Sticky Notes</h1>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => createNewNote(false)}
+            className="p-2 hover:bg-matte-light rounded-lg transition-colors"
+            title="New Note (Ctrl+N)"
+          >
+            <Plus size={18} className="text-cyan-accent" />
+          </button>
+          <button
+            onClick={() => createNewNote(true)}
+            className="p-2 hover:bg-matte-light rounded-lg transition-colors"
+            title="New Pinned Note (Ctrl+Shift+N)"
+          >
+            <Pin size={18} className="text-cyan-accent" />
+          </button>
+          <button
+            onClick={handleOpenSettings}
+            className="p-2 hover:bg-matte-light rounded-lg transition-colors"
+            title="Settings"
+          >
+            <Settings size={18} className="text-text-secondary" />
+          </button>
+          <button
+            onClick={handleCloseWindow}
+            className="p-2 hover:bg-red-500 hover:bg-opacity-20 rounded-lg transition-colors"
+            title="Close Dashboard"
+          >
+            <X size={18} className="text-text-secondary hover:text-red-400" />
+          </button>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="p-4 space-y-3 border-b border-matte-border">
+        {/* Search */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" />
+          <input
+            type="text"
+            placeholder="Search notes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-matte-card border border-matte-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-cyan-accent"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="flex items-center space-x-3 text-sm">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'updated' | 'created' | 'title')}
+            className="bg-matte-card border border-matte-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-cyan-accent"
+          >
+            <option value="updated">Last Updated</option>
+            <option value="created">Date Created</option>
+            <option value="title">Title</option>
+          </select>
+
+          {allTags.length > 0 && (
+            <select
+              value={selectedTag}
+              onChange={(e) => setSelectedTag(e.target.value)}
+              className="bg-matte-card border border-matte-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-cyan-accent"
+            >
+              <option value="">All Tags</option>
+              {allTags.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Stats */}
+        <div className="flex items-center justify-between text-xs text-text-muted">
+          <span>{filteredNotes.length} of {notes.length} notes</span>
+          <div className="flex space-x-3">
+            <button
+              onClick={exportNotes}
+              className="hover:text-cyan-accent transition-colors"
+            >
+              Export
+            </button>
+            <button
+              onClick={importNotes}
+              className="hover:text-cyan-accent transition-colors"
+            >
+              Import
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Notes List */}
+      <div 
+        className="flex-1 p-4 space-y-3 relative overflow-y-auto overflow-x-hidden" 
+        style={{ 
+          scrollbarWidth: 'auto',
+          maxHeight: 'calc(100vh - 200px)'
+        }}
+        onScroll={(e) => {
+          const element = e.currentTarget;
+          setIsScrollable(element.scrollHeight > element.clientHeight);
+        }}
+      >
+        {filteredNotes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-text-muted">
+            <FileText size={48} className="mb-4 opacity-50" />
+            <p className="text-center">
+              {searchQuery || selectedTag ? 'No notes match your search' : 'No notes yet'}
+            </p>
+            <button
+              onClick={() => createNewNote(false)}
+              className="mt-4 px-4 py-2 bg-cyan-accent text-white rounded-lg hover:bg-cyan-hover transition-colors"
+            >
+              Create your first note
+            </button>
+          </div>
+        ) : (
+          <>
+            {filteredNotes.map(note => (
+              <NoteCard
+                key={note.id}
+                note={note}
+                onOpen={() => openNote(note.id)}
+                onDelete={() => deleteNote(note.id)}
+                onTogglePin={() => toggleNotePin(note.id)}
+              />
+            ))}
+            
+            {/* Scroll indicator gradient */}
+            {filteredNotes.length > 5 && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-matte-dark to-transparent pointer-events-none" />
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface NoteCardProps {
+  note: Note;
+  onOpen: () => void;
+  onDelete: () => void;
+  onTogglePin: () => void;
+  isOpen?: boolean;
+}
+
+const NoteCard: React.FC<NoteCardProps> = ({ note, onOpen, onDelete, onTogglePin, isOpen = false }) => {
+  const [showMenu, setShowMenu] = useState(false);
+
+  const getPreviewText = (html: string) => {
+    // Simple HTML to text conversion for preview
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  };
+
+  const previewText = getPreviewText(note.body);
+
+  return (
+    <div 
+      className={`group bg-matte-card rounded-lg p-3 border transition-all cursor-pointer ${
+        isOpen 
+          ? 'border-cyan-accent border-opacity-70 shadow-lg shadow-cyan-accent shadow-opacity-20' 
+          : 'border-matte-border hover:border-cyan-accent hover:border-opacity-50'
+      }`}
+      style={{ backgroundColor: note.color }}
+      onClick={onOpen}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="font-medium text-text-primary truncate flex-1 mr-2">
+          {note.title || 'Untitled'}
+        </h3>
+        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {isOpen && (
+            <div className="w-2 h-2 bg-cyan-accent rounded-full animate-pulse" title="Currently open" />
+          )}
+          {note.pinned && (
+            <Pin size={12} className="text-cyan-accent" />
+          )}
+          {note.locked && (
+            <Lock size={12} className="text-text-muted" />
+          )}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="p-1 hover:bg-black hover:bg-opacity-20 rounded"
+            >
+              <MoreVertical size={12} className="text-text-secondary" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-matte-card border border-matte-border rounded-lg shadow-lg z-10 min-w-24">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTogglePin();
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-matte-light flex items-center space-x-2"
+                >
+                  <Pin size={12} />
+                  <span>{note.pinned ? 'Unpin' : 'Pin'}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-red-500 hover:bg-opacity-20 text-red-400 flex items-center space-x-2"
+                >
+                  <X size={12} />
+                  <span>Delete</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {previewText && (
+        <p className="text-text-secondary text-sm line-clamp-3 mb-2">
+          {previewText}
+        </p>
+      )}
+
+      {note.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {note.tags.map(tag => (
+            <span
+              key={tag}
+              className="inline-block px-2 py-1 bg-cyan-accent bg-opacity-20 text-cyan-accent text-xs rounded"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between text-xs text-text-muted">
+        <span>{formatDate(note.updatedAt)}</span>
+        <div className="flex items-center space-x-2">
+          {note.versions.length > 0 && (
+            <span>{note.versions.length} versions</span>
+          )}
+          <Calendar size={10} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Initialize the dashboard app
+const root = createRoot(document.getElementById('root')!);
+root.render(<DashboardApp />);
