@@ -73,17 +73,32 @@ A minimal, modern sticky notes application for Ubuntu Linux built with Electron,
 
 ## Installation
 
-### From .deb Package (Recommended)
-```bash
-# Download the latest release from the Releases page
-# Install with dpkg
-sudo dpkg -i sticky-notes_1.0.0_amd64.deb
+### 📥 Option 1: Install via .deb Package (Recommended)
+This is the easiest way to install Sticky Notes on Ubuntu/Debian.
 
-# Install dependencies if needed
-sudo apt-get install -f
-```
+1.  **Download**: Go to the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases) and download the latest `.deb` file (e.g., `sticky-notes-electron_1.0.0_amd64.deb`).
+2.  **Install**:
+    *   **Graphical Method**: Double-click the downloaded `.deb` file and click "Install".
+    *   **Terminal Method**:
+        ```bash
+        cd ~/Downloads
+        sudo dpkg -i sticky-notes-electron_1.0.0_amd64.deb
+        
+        # If you see dependency errors, run this to fix them:
+        sudo apt-get install -f
+        ```
+3.  **Run**: Open your applications menu and search for "Sticky Notes".
 
-### From Source
+### 🏃 Option 2: Run via AppImage (Portable)
+No installation required. Runs on most Linux distributions.
+
+1.  **Download**: Get the `.AppImage` file from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
+2.  **Make Executable**:
+    *   Right-click the file → Properties → Permissions → Check "Allow executing file as program".
+    *   *Or via terminal*: `chmod +x Sticky\ Notes-1.0.0.AppImage`
+3.  **Run**: Double-click the file to launch.
+
+### 🛠️ Option 3: Build from Source
 ```bash
 # Clone the repository
 git clone https://github.com/ibrahimgulbutt/sticky-notes-ubuntu.git
