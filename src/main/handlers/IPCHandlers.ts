@@ -127,17 +127,10 @@ export class IPCHandlers {
 
   private async handleToggleLock(window: BrowserWindow): Promise<void> {
     const noteId = await this.findNoteIdForWindow(window);
-    console.log('Toggle lock - noteId found:', noteId);
     
     if (noteId) {
-      const note = await this.noteService.getNote(noteId);
-      console.log('Current note state:', { id: note?.id, locked: note?.locked });
-      
       // Since the renderer is handling the state update, we don't need to do anything here
       // The renderer will call updateNote directly
-      console.log('Lock toggle handled by renderer');
-    } else {
-      console.error('Could not find noteId for window');
     }
   }
 
@@ -145,7 +138,6 @@ export class IPCHandlers {
     // This is a simplified approach - in a real implementation, you might want to
     // pass the noteId through the window's webContents or store it in a map
     const url = window.webContents.getURL();
-    console.log('Window URL:', url);
     
     const urlParams = new URLSearchParams(url.split('?')[1] || '');
     const noteId = urlParams.get('noteId');

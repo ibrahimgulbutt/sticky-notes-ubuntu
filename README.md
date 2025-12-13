@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/assets/icon.png" alt="Sticky Notes Logo" width="128" height="128" />
+</p>
+
 # Sticky Notes - Beautiful Desktop Note Taking App
 
 A minimal, modern sticky notes application for Ubuntu Linux built with Electron, React, and TypeScript. Features a beautiful matte dark theme with cyan accents, persistent storage, and powerful keyboard shortcuts.
@@ -71,9 +75,7 @@ A minimal, modern sticky notes application for Ubuntu Linux built with Electron,
 
 ### From .deb Package (Recommended)
 ```bash
-# Download the latest release
-wget https://github.com/yourusername/sticky-notes/releases/latest/sticky-notes_1.0.0_amd64.deb
-
+# Download the latest release from the Releases page
 # Install with dpkg
 sudo dpkg -i sticky-notes_1.0.0_amd64.deb
 
@@ -84,8 +86,8 @@ sudo apt-get install -f
 ### From Source
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/sticky-notes.git
-cd sticky-notes
+git clone https://github.com/ibrahimgulbutt/sticky-notes-ubuntu.git
+cd sticky-notes-ubuntu
 
 # Install dependencies
 npm install
@@ -247,11 +249,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Support
 
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/yourusername/sticky-notes/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/yourusername/sticky-notes/discussions)
-- 📧 **Email**: support@sticky-notes.app
-- 💬 **Discord**: [Join our community](https://discord.gg/sticky-notes)
-
----
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/discussions)
 
 **Made with ❤️ for Ubuntu users who love beautiful, minimal productivity tools.**

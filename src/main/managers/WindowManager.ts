@@ -12,6 +12,13 @@ export class WindowManager implements IWindowManager {
 
   constructor() {}
 
+  private getIconPath(): string {
+    if (app.isPackaged) {
+      return join(process.resourcesPath, 'assets/icon.png');
+    }
+    return join(__dirname, '../../src/assets/icon.png');
+  }
+
   // Dashboard Window Management
   createDashboardWindow(): BrowserWindow {
     if (this.dashboardWindow && !this.dashboardWindow.isDestroyed()) {
@@ -34,7 +41,7 @@ export class WindowManager implements IWindowManager {
       backgroundColor: '#0B0C0D',
       show: false,
       resizable: true,
-      icon: join(__dirname, '../../assets/icon.png'),
+      icon: this.getIconPath(),
     });
 
     const isDev = process.env.NODE_ENV === 'development';
@@ -118,7 +125,7 @@ export class WindowManager implements IWindowManager {
       resizable: true,
       modal: true,
       parent: this.dashboardWindow || undefined,
-      icon: join(__dirname, '../../assets/icon.png'),
+      icon: this.getIconPath(),
     });
 
     const isDev = process.env.NODE_ENV === 'development';
@@ -180,7 +187,7 @@ export class WindowManager implements IWindowManager {
       skipTaskbar: false,
       resizable: true,
       movable: true,
-      icon: join(__dirname, '../../assets/icon.png'),
+      icon: this.getIconPath(),
     });
 
     const isDev = process.env.NODE_ENV === 'development';
