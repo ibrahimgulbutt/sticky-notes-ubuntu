@@ -2,7 +2,7 @@
   "name": "sticky-notes-electron",
   "version": "1.0.0",
   "description": "A minimal, beautiful sticky notes app for Ubuntu with matte dark theme and cyan accents",
-  "main": "dist/main/main-new.js",
+  "main": "dist/main/main.js",
   "author": {
     "name": "Ibrahim Butt",
     "email": "ibrahim@example.com"
@@ -21,24 +21,39 @@
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
     "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "test": "vitest",
     "postinstall": "electron-builder install-app-deps"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^20.5.0",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/parser": "^8.49.0",
     "@vitejs/plugin-react": "^4.0.4",
     "autoprefixer": "^10.4.15",
     "concurrently": "^8.2.0",
     "electron": "^26.0.0",
     "electron-builder": "^24.13.3",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "jsdom": "^27.3.0",
     "postcss": "^8.4.28",
+    "prettier": "^3.7.4",
     "rimraf": "^5.0.1",
     "sharp": "^0.34.4",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.1.6",
-    "vite": "^4.4.9"
+    "vite": "^4.4.9",
+    "vitest": "^4.0.15"
   },
   "dependencies": {
     "@tiptap/core": "^2.1.8",
@@ -62,7 +77,8 @@
     "lucide-react": "^0.264.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "zustand": "^5.0.9"
   },
   "build": {
     "appId": "com.stickynotes.app",
@@ -79,18 +95,24 @@
       {
         "from": "src/assets",
         "to": "assets",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "linux": {
       "target": [
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Utility",

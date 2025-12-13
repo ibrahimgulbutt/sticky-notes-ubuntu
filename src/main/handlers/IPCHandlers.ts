@@ -122,11 +122,7 @@ export class IPCHandlers {
     window.setAlwaysOnTop(newPinnedState);
     window.setSkipTaskbar(newPinnedState);
     
-    // Find the note ID for this window and update the pinned state
-    const noteId = await this.findNoteIdForWindow(window);
-    if (noteId) {
-      await this.noteService.updateNote(noteId, { pinned: newPinnedState });
-    }
+    // Note state update is handled by renderer
   }
 
   private async handleToggleLock(window: BrowserWindow): Promise<void> {
