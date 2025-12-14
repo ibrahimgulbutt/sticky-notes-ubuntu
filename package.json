@@ -5,7 +5,7 @@
   "main": "dist/main/main.js",
   "author": {
     "name": "Ibrahim Butt",
-    "email": "ibrahim@example.com"
+    "email": "ibrahimgulbutt242@gmail.com"
   },
   "license": "MIT",
   "homepage": "./",
@@ -83,13 +83,17 @@
   "build": {
     "appId": "com.stickynotes.app",
     "productName": "Sticky Notes",
+    "asar": true,
+    "compression": "maximum",
     "directories": {
       "output": "release"
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*",
-      "package.json"
+      "package.json",
+      "!**/*.map",
+      "!**/*.md",
+      "!node_modules/.cache"
     ],
     "extraResources": [
       {
@@ -102,27 +106,27 @@
     ],
     "linux": {
       "target": [
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        }
+        "deb",
+        "AppImage"
       ],
       "category": "Utility",
+      "maintainer": "Ibrahim Butt <ibrahim@example.com>",
       "icon": "src/assets/icon.png",
+      "synopsis": "A minimal, beautiful sticky notes app",
+      "description": "A minimal, beautiful sticky notes app for Ubuntu with matte dark theme and cyan accents",
+      "executableName": "sticky-notes",
       "desktop": {
         "Name": "Sticky Notes",
         "Comment": "Beautiful sticky notes for your desktop",
         "Keywords": "notes;todo;sticky;desktop;",
-        "StartupWMClass": "sticky-notes-electron"
+        "StartupWMClass": "sticky-notes",
+        "Terminal": "false",
+        "Type": "Application",
+        "Categories": "Utility;Office;"
       }
+    },
+    "deb": {
+      "afterInstall": "scripts/linux-after-install.sh"
     },
     "win": {
       "target": "nsis",

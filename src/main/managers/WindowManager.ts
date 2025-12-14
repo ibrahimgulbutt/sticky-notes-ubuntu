@@ -39,7 +39,7 @@ export class WindowManager implements IWindowManager {
       frame: false,
       titleBarStyle: 'hidden',
       backgroundColor: '#0B0C0D',
-      show: false,
+      show: true, // Forced show for debugging
       resizable: true,
       icon: this.getIconPath(),
     });

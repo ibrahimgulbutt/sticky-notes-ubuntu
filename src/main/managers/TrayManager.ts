@@ -1,4 +1,4 @@
-import { Tray, Menu, nativeImage } from 'electron';
+import { Tray, Menu, nativeImage, app } from 'electron';
 import { join } from 'path';
 import type { ITrayManager } from '../interfaces';
 
@@ -7,12 +7,19 @@ export class TrayManager implements ITrayManager {
   private onClickCallback: (() => void) | null = null;
   private onRightClickCallback: (() => void) | null = null;
 
+  private getIconPath(): string {
+    if (app.isPackaged) {
+      return join(process.resourcesPath, 'assets/tray-icon.png');
+    }
+    return join(__dirname, '../../assets/tray-icon.png');
+  }
+
   createTray(): void {
     if (this.tray) {
       return; // Already created
     }
 
-    const iconPath = join(__dirname, '../../assets/tray-icon.png');
+    const iconPath = this.getIconPath();
     this.tray = new Tray(iconPath);
     
     this.updateTrayMenu();

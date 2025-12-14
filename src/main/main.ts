@@ -2,6 +2,14 @@ import { app, globalShortcut } from 'electron';
 import Store from 'electron-store';
 import type { Note, Settings } from '../types';
 
+// Fix for Linux: Disable GPU acceleration to prevent black screen/crash on startup
+// This MUST be called before app.whenReady() and preferably at the top level
+if (process.platform === 'linux') {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('no-sandbox');
+}
+
 // Import modular services and managers
 import { WindowManager } from './managers/WindowManager';
 import { TrayManager } from './managers/TrayManager';
@@ -16,6 +24,11 @@ class StickyNotesApp {
   private ipcHandlers: IPCHandlers;
 
   constructor() {
+    // Set App User Model ID for Windows and Linux
+    if (process.platform !== 'darwin') {
+      app.setAppUserModelId('com.stickynotes.app');
+    }
+
     // Initialize store with defaults
     this.store = new Store<{notes: Note[], settings: Settings}>({
       defaults: {
@@ -73,9 +86,23 @@ class StickyNotesApp {
   }
 
   private init(): void {
+    console.log('App initializing...');
     app.whenReady().then(() => {
-      this.windowManager.createDashboardWindow();
-      this.setupTray();
+      console.log('App ready, creating windows...');
+      try {
+        this.windowManager.createDashboardWindow();
+        console.log('Dashboard window created');
+      } catch (e) {
+        console.error('Error creating dashboard window:', e);
+      }
+
+      try {
+        this.setupTray();
+        console.log('Tray setup complete');
+      } catch (e) {
+        console.error('Error setting up tray:', e);
+      }
+      
       this.registerGlobalShortcuts();
       this.setupSettingsHandlers();
       
