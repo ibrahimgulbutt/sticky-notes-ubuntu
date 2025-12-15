@@ -20,6 +20,8 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
@@ -133,8 +135,11 @@
       "icon": "src/assets/icon.png"
     },
     "mac": {
-      "target": "dmg",
-      "icon": "src/assets/icon.png"
+      "target": [
+        "zip",
+        "tar.gz"
+      ],
+      "icon": "src/assets/icon-mac.png"
     },
     "snap": {
       "grade": "stable",

@@ -110,3 +110,11 @@ config.local.*
 *.db
 *.sqlite
 *.sqlite3
+
+# Wine prefixes for cross-compilation
+.wine/
+.wine32/
+.wine_build/
+
+# Generated assets
+src/assets/icon-mac.png
