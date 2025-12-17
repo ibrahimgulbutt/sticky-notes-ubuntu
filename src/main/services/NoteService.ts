@@ -76,10 +76,16 @@ export class NoteService implements INoteService {
         }
       }
 
+      // Determine if we should update the timestamp
+      // Only update timestamp if title or body changed
+      const shouldUpdateTimestamp = 
+        (updates.title !== undefined && updates.title !== currentNote.title) || 
+        (updates.body !== undefined && updates.body !== currentNote.body);
+
       notes[index] = {
         ...currentNote,
         ...updates,
-        updatedAt: new Date().toISOString(),
+        updatedAt: shouldUpdateTimestamp ? new Date().toISOString() : currentNote.updatedAt,
       };
 
       this.store.set('notes', notes);
@@ -126,7 +132,8 @@ export class NoteService implements INoteService {
     const updatedNotes = notes.map(note => {
       if (note.color === oldColor) {
         hasChanges = true;
-        const updatedNote = { ...note, color: newColor, updatedAt: new Date().toISOString() };
+        // Don't update timestamp for color changes
+        const updatedNote = { ...note, color: newColor };
         updatedNotesList.push(updatedNote);
         return updatedNote;
       }

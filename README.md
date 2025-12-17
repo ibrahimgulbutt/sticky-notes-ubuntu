@@ -3,132 +3,108 @@
 </p>
 
 <h1 align="center">Sticky Notes</h1>
-<p align="center"><strong>A clean, lightweight, and elegant desktop sticky notes application.</strong></p>
-<p align="center">Available for <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong></p>
 
 <p align="center">
-  <img src="screenshot.png" alt="Sticky Notes App Screenshot" />
+  <strong>A modern, beautiful, and privacy-focused sticky notes application for your desktop.</strong>
+</p>
+
+<p align="center">
+  <a href="#-features">Features</a> •
+  <a href="#-screenshots">Screenshots</a> •
+  <a href="#-download--installation">Download</a> •
+  <a href="#-build-from-source">Build</a>
 </p>
 
 ---
 
-## Overview
+## 🚀 Overview
 
-**Sticky Notes** is a cross-platform desktop application designed to help you quickly capture thoughts, tasks, and reminders without distraction. It focuses on simplicity, speed, and aesthetics—providing a modern note-taking experience that stays out of your way.
+Sticky Notes is a lightweight yet powerful desktop application designed to help you capture thoughts, manage tasks, and organize your day. Built with Electron and React, it offers a seamless experience across Windows, macOS, and Linux with a sleek matte dark theme.
 
-The application runs entirely offline and stores all data locally, ensuring privacy and fast performance.
+## ✨ Features
 
----
+*   **🎨 Modern Design**: Beautiful matte dark interface with cyan accents, designed to be easy on the eyes.
+*   **📝 Rich Text Editor**: Full support for **bold**, *italic*, lists, checklists, and more.
+*   **📊 Central Dashboard**: A unified view to manage, search, and filter all your notes in one place.
+*   **📌 Smart Organization**: 
+    *   **Pin** important notes to keep them at the top.
+    *   **Lock** notes to prevent accidental edits.
+    *   **Color-code** notes for visual categorization.
+*   **🔍 Advanced Search & Sort**: Quickly find what you need with real-time search. Sort by Title, Date Created, or Last Updated.
+*   **ℹ️ Detailed Metadata**: View note details including creation time, version history, and tags.
+*   **💾 Auto-Save & Local**: Your work is saved automatically. All data lives locally on your device for maximum privacy.
+*   **⚙️ Customizable**: Adjust font settings, default behaviors, and more to match your workflow.
 
-## Key Features
+## 📸 Screenshots
 
-* **Minimal & Modern UI** – Matte dark theme with subtle cyan accents
-* **Rich Text Editing** – Support for bold, italics, lists, and checklists
-* **Always-on-Top Notes** – Keep important notes visible while working
-* **Automatic Persistence** – Notes are saved instantly as you type
-* **Offline-First** – No internet connection or account required
-* **Cross-Platform** – Native installers for Windows, macOS, and Linux
+<p align="center">
+  <img src="ScreenShots/Screenshot from 2025-12-17 18-46-38.png" alt="Dashboard View" width="800" />
+  <br>
+  <em>The Dashboard - Your central hub for all notes</em>
+</p>
 
-## Installation
+<p align="center">
+  <img src="ScreenShots/Screenshot from 2025-12-17 18-47-01.png" alt="Note Editor" width="45%" />
+  <img src="ScreenShots/Screenshot from 2025-12-17 18-47-27.png" alt="Settings & Info" width="45%" />
+  <br>
+  <em>Rich Text Editor and Note Details</em>
+</p>
 
-### Windows
+## 📥 Download & Installation
 
-1. Download the latest installer (`Sticky Notes Setup 1.0.0.exe`) from the **Releases** page.
-2. Run the installer and follow the on-screen instructions.
-3. The application will launch automatically after installation.
+### 🪟 Windows
+1.  **Download**: Get the latest installer (`Sticky Notes Setup 1.0.0.exe`) from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
+2.  **Install**: Double-click the `.exe` file. The app will install and launch automatically.
 
----
+### 🍎 macOS
+1.  **Download**: Get the latest archive (`Sticky Notes-1.0.0-mac.zip`) from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
+2.  **Install**:
+    *   Unzip the file.
+    *   Drag `Sticky Notes.app` to your **Applications** folder.
+    *   *Note: You may need to right-click and select "Open" to bypass security warnings for unsigned apps.*
 
+### 🐧 Linux (Ubuntu/Debian)
+**Option 1: .deb Package (Recommended)**
+1.  **Download**: Get the `.deb` file (`sticky-notes-electron_1.0.0_amd64.deb`) from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
+2.  **Install**:
+    ```bash
+    sudo dpkg -i sticky-notes-electron_1.0.0_amd64.deb
+    sudo apt-get install -f # Fix dependencies if needed
+    ```
 
-### Linux (Ubuntu / Debian)
+**Option 2: AppImage (Portable)**
+1.  **Download**: Get the `.AppImage` file.
+2.  **Run**: Right-click → Properties → Permissions → Allow executing file as program. Then double-click to run.
 
-#### Option 1: `.deb` Package (Recommended)
+## 🛠️ Build from Source
 
-```bash
-sudo dpkg -i sticky-notes-electron_1.0.0_amd64.deb
-sudo apt-get install -f
-```
-
-#### Option 2: AppImage (Portable)
-
-1. Download the `.AppImage` file
-2. Make it executable:
-
-```bash
-chmod +x Sticky-Notes.AppImage
-```
-
-3. Run the application:
-
-```bash
-./Sticky-Notes.AppImage
-```
-
----
-
-### macOS
-
-1. Download `Sticky Notes-1.0.0-mac.zip` from the **Releases** page.
-2. Extract the archive.
-3. Drag **Sticky Notes.app** into your **Applications** folder.
-
-> **Security Notice**
-> This app is not currently signed with an Apple Developer certificate. If macOS blocks it:
->
-> * Right-click the app → **Open**
-> * Confirm by clicking **Open** again
-
----
-
-## Build from Source
-
-You can build Sticky Notes locally for development or custom distribution.
-
-### Prerequisites
-
-* Node.js (LTS recommended)
-* npm
-
-### Setup
+Developers can build the app from source using the following steps:
 
 ```bash
+# Clone the repository
 git clone https://github.com/ibrahimgulbutt/sticky-notes-ubuntu.git
 cd sticky-notes-ubuntu
+
+# Install dependencies
 npm install
-```
 
-### Development
-
-```bash
+# Run in development mode
 npm run dev
+
+# Build for production
+npm run build
+
+# Package for your platform
+npm run dist:win   # Windows
+npm run dist:mac   # macOS
+npm run dist:linux # Linux
 ```
 
-### Production Builds
+## 📄 License
 
-```bash
-npm run dist:win     # Windows
-npm run dist:mac     # macOS
-npm run dist:linux   # Linux
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
-## Technology Stack
-
-* **Electron** – Cross-platform desktop framework
-* **JavaScript / HTML / CSS** – Core application logic and UI
-* **electron-builder** – Application packaging and distribution
-
----
-
-## License
-
-This project is licensed under the **MIT License**.
-
----
-
-## Author
-
-Developed and maintained by **Ibrahim Gul Butt**.
-
-If you find this project useful, consider starring the repository ⭐
+<p align="center">
+  Made with ❤️ by <strong>Ibrahim Butt</strong>
+</p>
