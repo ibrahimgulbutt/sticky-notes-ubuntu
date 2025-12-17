@@ -38,10 +38,16 @@ Sticky Notes is a lightweight yet powerful desktop application designed to help 
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="ScreenShots/Screenshot from 2025-12-17 18-46-38.png" alt="Dashboard View" width="800" />
+  <img 
+    src="ScreenShots/Screenshot from 2025-12-17 18-46-38.png"
+    alt="Dashboard View"
+    width="350"
+    height="404"
+  />
   <br>
-  <em>The Dashboard - Your central hub for all notes</em>
+  <em>The Dashboard – Your central hub for all notes</em>
 </p>
+
 
 <p align="center">
   <img src="ScreenShots/Screenshot from 2025-12-17 18-47-01.png" alt="Note Editor" width="45%" />
