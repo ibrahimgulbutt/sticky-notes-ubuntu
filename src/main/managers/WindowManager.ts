@@ -20,9 +20,12 @@ export class WindowManager implements IWindowManager {
   }
 
   // Dashboard Window Management
-  createDashboardWindow(): BrowserWindow {
+  createDashboardWindow(show: boolean = true): BrowserWindow {
     if (this.dashboardWindow && !this.dashboardWindow.isDestroyed()) {
-      this.dashboardWindow.focus();
+      if (show) {
+        this.dashboardWindow.show();
+        this.dashboardWindow.focus();
+      }
       return this.dashboardWindow;
     }
 
@@ -39,7 +42,7 @@ export class WindowManager implements IWindowManager {
       frame: false,
       titleBarStyle: 'hidden',
       backgroundColor: '#0B0C0D',
-      show: true, // Forced show for debugging
+      show: false, // Don't show immediately, wait for ready-to-show or explicit show
       resizable: true,
       icon: this.getIconPath(),
     });
@@ -53,7 +56,9 @@ export class WindowManager implements IWindowManager {
     }
 
     this.dashboardWindow.once('ready-to-show', () => {
-      this.dashboardWindow?.show();
+      if (show) {
+        this.dashboardWindow?.show();
+      }
     });
 
     // FIXED: Dashboard close behavior - minimize to tray instead of destroying
@@ -278,6 +283,14 @@ export class WindowManager implements IWindowManager {
 
   getWindowById(id: number): BrowserWindow | null {
     return this.windows.get(id) || null;
+  }
+
+  broadcast(channel: string, ...args: any[]): void {
+    this.windows.forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send(channel, ...args);
+      }
+    });
   }
 
   // Utility methods for IPC handlers

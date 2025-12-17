@@ -15,6 +15,7 @@ import { WindowManager } from './managers/WindowManager';
 import { TrayManager } from './managers/TrayManager';
 import { NoteService } from './services/NoteService';
 import { IPCHandlers } from './handlers/IPCHandlers';
+import { SettingsManager } from './managers/SettingsManager';
 
 class StickyNotesApp {
   private store: Store<{notes: Note[], settings: Settings}>;
@@ -22,6 +23,7 @@ class StickyNotesApp {
   private trayManager: TrayManager;
   private noteService: NoteService;
   private ipcHandlers: IPCHandlers;
+  private settingsManager: SettingsManager;
 
   constructor() {
     // Set App User Model ID for Windows and Linux
@@ -45,9 +47,7 @@ class StickyNotesApp {
           },
           completedItemBehavior: 'strike',
           autoStart: false,
-          restoreLastNotes: true,
-          fontSize: 14,
-          fontFamily: 'Inter',
+          restoreLastNotes: false,
           autoHide: false,
           defaultNoteColor: '#111214',
           showLineNumbers: false,
@@ -58,19 +58,18 @@ class StickyNotesApp {
           autoBackup: true,
           backupInterval: 30,
           maxBackups: 10,
+          cyanBold: true,
+          dashboardSortBy: 'updated',
           shortcuts: {
-            newNote: 'Ctrl+N',
-            newPinnedNote: 'Ctrl+Shift+N',
-            toggleDashboard: 'Ctrl+D',
-            search: 'Ctrl+F',
-            save: 'Ctrl+S'
+            newNote: 'Ctrl+N'
           }
         },
       },
     });
 
     // Initialize services and managers
-    this.noteService = new NoteService(this.store);
+    this.settingsManager = new SettingsManager(this.store);
+    this.noteService = new NoteService(this.store, this.settingsManager);
     this.windowManager = new WindowManager();
     this.trayManager = new TrayManager();
     this.ipcHandlers = new IPCHandlers(this.noteService, this.windowManager);
@@ -90,6 +89,7 @@ class StickyNotesApp {
     app.whenReady().then(() => {
       console.log('App ready, creating windows...');
       try {
+        // Create and show dashboard
         this.windowManager.createDashboardWindow();
         console.log('Dashboard window created');
       } catch (e) {
@@ -216,13 +216,25 @@ class StickyNotesApp {
 
   // Settings management
   private getSettings(): Settings {
-    return this.store.get('settings') as Settings;
+    return this.settingsManager.getSettings();
   }
 
   private async updateSettings(updates: Partial<Settings>): Promise<void> {
-    const currentSettings = this.getSettings();
-    const newSettings = { ...currentSettings, ...updates };
-    this.store.set('settings', newSettings);
+    const oldSettings = this.getSettings();
+    const newSettings = await this.settingsManager.updateSettings(updates);
+
+    // Check if default note color changed
+    if (updates.defaultNoteColor && updates.defaultNoteColor !== oldSettings.defaultNoteColor) {
+      const updatedNotes = await this.noteService.updateNotesColor(oldSettings.defaultNoteColor, updates.defaultNoteColor);
+      
+      // Broadcast updates for each note so open windows can refresh
+      updatedNotes.forEach(note => {
+        this.windowManager.broadcast('note:updated', note);
+      });
+    }
+
+    // Broadcast settings update to all windows
+    this.windowManager.broadcast('settings:updated', newSettings);
 
     // Re-register global shortcuts if they changed
     if (updates.globalShortcuts) {

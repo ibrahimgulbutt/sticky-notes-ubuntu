@@ -12,10 +12,12 @@ import {
   Tag,
   Calendar,
   Eye,
-  EyeOff
+  EyeOff,
+  Info
 } from 'lucide-react';
 import type { Note, Settings as AppSettings } from '../types';
 import './styles.css';
+import { useSettingsStore } from './store/useSettingsStore';
 
 // Utility function for date formatting
 function formatDate(dateString: string): string {
@@ -33,29 +35,112 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString();
 }
 
+interface InfoModalProps {
+  note: Note;
+  onClose: () => void;
+}
+
+const InfoModal: React.FC<InfoModalProps> = ({ note, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-matte-card border border-matte-border rounded-lg p-6 max-w-md w-full shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-text-primary">Note Details</h2>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="space-y-3 text-sm">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-text-muted">Title:</span>
+            <span className="col-span-2 text-text-primary font-medium truncate">{note.title || 'Untitled'}</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-text-muted">Created:</span>
+            <span className="col-span-2 text-text-primary">{new Date(note.createdAt).toLocaleString()}</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-text-muted">Last Updated:</span>
+            <span className="col-span-2 text-text-primary">{new Date(note.updatedAt).toLocaleString()}</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-text-muted">Versions:</span>
+            <span className="col-span-2 text-text-primary">{note.versions.length}</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <span className="text-text-muted">Status:</span>
+            <div className="col-span-2 flex gap-2">
+              {note.pinned && <span className="text-cyan-accent">Pinned</span>}
+              {note.locked && <span className="text-yellow-500">Locked</span>}
+              {!note.pinned && !note.locked && <span className="text-text-secondary">Normal</span>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+             <span className="text-text-muted">Tags:</span>
+             <div className="col-span-2 flex flex-wrap gap-1">
+               {note.tags.length > 0 ? (
+                 note.tags.map(tag => (
+                   <span key={tag} className="px-1.5 py-0.5 bg-matte-light rounded text-xs text-text-secondary">
+                     {tag}
+                   </span>
+                 ))
+               ) : (
+                 <span className="text-text-muted italic">No tags</span>
+               )}
+             </div>
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-end">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 bg-matte-light hover:bg-matte-border text-text-primary rounded transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DashboardApp: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const { settings, init: initSettings, updateSettings } = useSettingsStore();
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated');
   const [isScrollable, setIsScrollable] = useState(false);
+  const [infoNote, setInfoNote] = useState<Note | null>(null);
 
   const loadNotes = useCallback(async () => {
     const allNotes = await window.electronAPI.getAllNotes();
     setNotes(allNotes);
   }, []);
 
-  const loadSettings = useCallback(async () => {
-    const appSettings = await window.electronAPI.getSettings();
-    setSettings(appSettings);
-  }, []);
-
   useEffect(() => {
     loadNotes();
-    loadSettings();
-  }, [loadNotes, loadSettings]);
+    initSettings();
+  }, [loadNotes, initSettings]);
+
+  // Initialize sort from settings
+  useEffect(() => {
+    if (settings?.dashboardSortBy) {
+      setSortBy(settings.dashboardSortBy);
+    }
+  }, [settings?.dashboardSortBy]);
+
+  const handleSortChange = (newSort: 'updated' | 'created' | 'title') => {
+    setSortBy(newSort);
+    updateSettings({ dashboardSortBy: newSort });
+  };
 
   // Filter and search notes
   useEffect(() => {
@@ -77,10 +162,24 @@ const DashboardApp: React.FC = () => {
     }
 
     // Sort notes
-    filtered.sort((a, b) => {
+    const sortedNotes = [...filtered].sort((a, b) => {
+      // Always prioritize pinned notes at the top
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+
+      // Prioritize title matches when searching
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const aTitleMatch = (a.title || '').toLowerCase().includes(query);
+        const bTitleMatch = (b.title || '').toLowerCase().includes(query);
+        
+        if (aTitleMatch && !bTitleMatch) return -1;
+        if (!aTitleMatch && bTitleMatch) return 1;
+      }
+
       switch (sortBy) {
         case 'title':
-          return a.title.localeCompare(b.title);
+          return (a.title || '').localeCompare(b.title || '');
         case 'created':
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case 'updated':
@@ -89,7 +188,7 @@ const DashboardApp: React.FC = () => {
       }
     });
 
-    setFilteredNotes(filtered);
+    setFilteredNotes(sortedNotes);
   }, [notes, searchQuery, selectedTag, sortBy]);
 
   const createNewNote = async (pinned = false) => {
@@ -124,7 +223,17 @@ const DashboardApp: React.FC = () => {
   const toggleNotePin = async (noteId: string) => {
     const note = notes.find(n => n.id === noteId);
     if (note) {
-      await window.electronAPI.updateNote(noteId, { pinned: !note.pinned });
+      const newPinnedState = !note.pinned;
+      
+      if (newPinnedState) {
+        // If pinning, unpin all other notes first (enforce single pin)
+        const currentlyPinned = notes.find(n => n.pinned && n.id !== noteId);
+        if (currentlyPinned) {
+          await window.electronAPI.updateNote(currentlyPinned.id, { pinned: false });
+        }
+      }
+      
+      await window.electronAPI.updateNote(noteId, { pinned: newPinnedState });
       await loadNotes();
     }
   };
@@ -167,7 +276,11 @@ const DashboardApp: React.FC = () => {
   const allTags = getAllTags();
 
   return (
-    <div className="w-full h-full bg-matte-dark text-text-primary flex flex-col">
+    <div className="w-full h-full bg-matte-dark text-text-primary flex flex-col relative">
+      {infoNote && (
+        <InfoModal note={infoNote} onClose={() => setInfoNote(null)} />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-matte-border">
         <h1 className="text-lg font-semibold text-text-primary">Sticky Notes</h1>
@@ -178,13 +291,6 @@ const DashboardApp: React.FC = () => {
             title="New Note (Ctrl+N)"
           >
             <Plus size={18} className="text-cyan-accent" />
-          </button>
-          <button
-            onClick={() => createNewNote(true)}
-            className="p-2 hover:bg-matte-light rounded-lg transition-colors"
-            title="New Pinned Note (Ctrl+Shift+N)"
-          >
-            <Pin size={18} className="text-cyan-accent" />
           </button>
           <button
             onClick={handleOpenSettings}
@@ -221,7 +327,7 @@ const DashboardApp: React.FC = () => {
         <div className="flex items-center space-x-3 text-sm">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'updated' | 'created' | 'title')}
+            onChange={(e) => handleSortChange(e.target.value as 'updated' | 'created' | 'title')}
             className="bg-matte-card border border-matte-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-cyan-accent"
           >
             <option value="updated">Last Updated</option>
@@ -246,26 +352,12 @@ const DashboardApp: React.FC = () => {
         {/* Stats */}
         <div className="flex items-center justify-between text-xs text-text-muted">
           <span>{filteredNotes.length} of {notes.length} notes</span>
-          <div className="flex space-x-3">
-            <button
-              onClick={exportNotes}
-              className="hover:text-cyan-accent transition-colors"
-            >
-              Export
-            </button>
-            <button
-              onClick={importNotes}
-              className="hover:text-cyan-accent transition-colors"
-            >
-              Import
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Notes List */}
       <div 
-        className="flex-1 p-4 space-y-3 relative overflow-y-auto overflow-x-hidden" 
+        className="flex-1 p-4 pb-8 space-y-3 relative overflow-y-auto overflow-x-hidden" 
         style={{ 
           scrollbarWidth: 'auto',
           maxHeight: 'calc(100vh - 200px)'
@@ -297,6 +389,7 @@ const DashboardApp: React.FC = () => {
                 onOpen={() => openNote(note.id)}
                 onDelete={() => deleteNote(note.id)}
                 onTogglePin={() => toggleNotePin(note.id)}
+                onShowInfo={() => setInfoNote(note)}
               />
             ))}
             
@@ -316,10 +409,11 @@ interface NoteCardProps {
   onOpen: () => void;
   onDelete: () => void;
   onTogglePin: () => void;
+  onShowInfo: () => void;
   isOpen?: boolean;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, onOpen, onDelete, onTogglePin, isOpen = false }) => {
+const NoteCard: React.FC<NoteCardProps> = ({ note, onOpen, onDelete, onTogglePin, onShowInfo, isOpen = false }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   const getPreviewText = (html: string) => {
@@ -381,6 +475,17 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onOpen, onDelete, onTogglePin
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    onShowInfo();
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-matte-light flex items-center space-x-2"
+                >
+                  <Info size={12} />
+                  <span>Info</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onDelete();
                     setShowMenu(false);
                   }}
@@ -396,9 +501,9 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onOpen, onDelete, onTogglePin
       </div>
 
       {previewText && (
-        <p className="text-text-secondary text-sm line-clamp-3 mb-2">
+        <div className="text-text-secondary text-sm mb-2 overflow-hidden" style={{ maxHeight: '4.5em' }}>
           {previewText}
-        </p>
+        </div>
       )}
 
       {note.tags.length > 0 && (

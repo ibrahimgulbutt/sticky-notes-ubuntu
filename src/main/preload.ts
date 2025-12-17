@@ -51,6 +51,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('note:lock-state-changed', listener);
     return () => ipcRenderer.removeListener('note:lock-state-changed', listener);
   },
+  onSettingsUpdated: (callback: (settings: Settings) => void) => {
+    const listener = (event: any, settings: Settings) => callback(settings);
+    ipcRenderer.on('settings:updated', listener);
+    return () => ipcRenderer.removeListener('settings:updated', listener);
+  },
+  onNoteUpdated: (callback: (note: Note) => void) => {
+    const listener = (event: any, note: Note) => callback(note);
+    ipcRenderer.on('note:updated', listener);
+    return () => ipcRenderer.removeListener('note:updated', listener);
+  },
 
   // Window info
   getNoteId: () => {

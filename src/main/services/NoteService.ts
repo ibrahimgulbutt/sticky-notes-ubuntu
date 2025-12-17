@@ -2,22 +2,28 @@ import Store from 'electron-store';
 import { v4 as uuidv4 } from 'uuid';
 import type { Note, Settings } from '../../types';
 import type { INoteService } from '../interfaces';
+import { SettingsManager } from '../managers/SettingsManager';
 
 export class NoteService implements INoteService {
   private store: Store<{notes: Note[], settings: Settings}>;
+  private settingsManager: SettingsManager;
 
-  constructor(store: Store<{notes: Note[], settings: Settings}>) {
+  constructor(store: Store<{notes: Note[], settings: Settings}>, settingsManager: SettingsManager) {
     this.store = store;
+    this.settingsManager = settingsManager;
   }
 
   // CRUD Operations
   async createNote(noteData: Partial<Note> = {}): Promise<Note> {
+    const defaultColor = this.settingsManager.getDefaultNoteColor();
+    console.log('Creating note with default color:', defaultColor);
+
     const note: Note = {
       id: uuidv4(),
       title: noteData.title || 'New Note',
       body: noteData.body || '',
       tags: noteData.tags || [],
-      color: noteData.color || '#111214',
+      color: noteData.color || defaultColor,
       accent: noteData.accent || '#00E5FF',
       pinned: noteData.pinned || false,
       locked: noteData.locked || false,
@@ -57,7 +63,7 @@ export class NoteService implements INoteService {
       
       // Save version if body or title changed
       if (updates.body !== undefined || updates.title !== undefined) {
-        const settings = this.store.get('settings') as Settings;
+        const settings = this.settingsManager.getSettings();
         currentNote.versions.push({
           at: new Date().toISOString(),
           body: currentNote.body,
@@ -112,6 +118,28 @@ export class NoteService implements INoteService {
     this.store.set('notes', filteredNotes);
   }
 
+  async updateNotesColor(oldColor: string, newColor: string): Promise<Note[]> {
+    const notes = await this.getAllNotes();
+    const updatedNotesList: Note[] = [];
+    let hasChanges = false;
+
+    const updatedNotes = notes.map(note => {
+      if (note.color === oldColor) {
+        hasChanges = true;
+        const updatedNote = { ...note, color: newColor, updatedAt: new Date().toISOString() };
+        updatedNotesList.push(updatedNote);
+        return updatedNote;
+      }
+      return note;
+    });
+
+    if (hasChanges) {
+      this.store.set('notes', updatedNotes);
+    }
+    
+    return updatedNotesList;
+  }
+
   async exportNotes(format: 'json' | 'markdown'): Promise<string> {
     const notes = await this.getAllNotes();
     
@@ -129,11 +157,13 @@ export class NoteService implements INoteService {
       try {
         const importedNotes = JSON.parse(data) as Note[];
         const currentNotes = await this.getAllNotes();
+        const defaultColor = this.settingsManager.getDefaultNoteColor();
         
         // Add imported notes with new IDs to avoid conflicts
         const newNotes = importedNotes.map(note => ({
           ...note,
           id: uuidv4(),
+          color: defaultColor, // Force default color
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }));

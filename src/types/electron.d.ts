@@ -29,6 +29,8 @@ declare global {
 
       // Event listeners
       onLockStateChanged: (callback: (data: { noteId: string; locked: boolean }) => void) => () => void;
+      onSettingsUpdated: (callback: (settings: Settings) => void) => () => void;
+      onNoteUpdated: (callback: (note: Note) => void) => () => void;
 
       // Window info
       getCurrentWindowId: () => Promise<number | null>;

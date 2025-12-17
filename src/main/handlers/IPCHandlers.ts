@@ -1,4 +1,5 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { ipcMain, BrowserWindow, dialog } from 'electron';
+import { writeFile, readFile } from 'fs/promises';
 import type { INoteService, IWindowManager } from '../interfaces';
 import type { Note, Settings } from '../../types';
 
@@ -99,17 +100,45 @@ export class IPCHandlers {
     ipcMain.handle('export:notes', async (_, format: 'json' | 'markdown') => {
       try {
         const data = await this.noteService.exportNotes(format);
-        // Handle file save dialog in the main process
-        return data;
+        
+        const { filePath } = await dialog.showSaveDialog({
+          title: 'Export Notes',
+          defaultPath: `sticky-notes-export.${format === 'json' ? 'json' : 'md'}`,
+          filters: [
+            { name: format === 'json' ? 'JSON' : 'Markdown', extensions: [format === 'json' ? 'json' : 'md'] }
+          ]
+        });
+
+        if (filePath) {
+          await writeFile(filePath, data, 'utf-8');
+          return true;
+        }
+        return false;
       } catch (error) {
+        console.error('Export failed:', error);
         throw error;
       }
     });
 
-    ipcMain.handle('import:notes', async (_, data: string, format: 'json' | 'markdown') => {
+    ipcMain.handle('import:notes', async () => {
       try {
-        await this.noteService.importNotes(data, format);
+        const { filePaths } = await dialog.showOpenDialog({
+          title: 'Import Notes',
+          filters: [
+            { name: 'Sticky Notes Data', extensions: ['json'] }
+          ],
+          properties: ['openFile']
+        });
+
+        if (filePaths && filePaths.length > 0) {
+          const data = await readFile(filePaths[0], 'utf-8');
+          // Currently only supporting JSON import as per service implementation
+          await this.noteService.importNotes(data, 'json');
+          return true;
+        }
+        return false;
       } catch (error) {
+        console.error('Import failed:', error);
         throw error;
       }
     });

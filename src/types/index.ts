@@ -48,8 +48,8 @@ export interface Settings {
   completedItemBehavior: 'strike' | 'archive' | 'delete';
   autoStart: boolean;
   restoreLastNotes: boolean;
-  fontSize: number;
-  fontFamily: string;
+  fontSize?: number;
+  fontFamily?: string;
   
   // New comprehensive settings
   autoHide: boolean;
@@ -62,12 +62,10 @@ export interface Settings {
   autoBackup: boolean;
   backupInterval: number;
   maxBackups: number;
+  cyanBold: boolean;
+  dashboardSortBy: 'updated' | 'created' | 'title';
   shortcuts: {
     newNote: string;
-    newPinnedNote: string;
-    toggleDashboard: string;
-    search: string;
-    save: string;
   };
 }
 

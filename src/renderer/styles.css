@@ -12,7 +12,7 @@
 }
 
 body {
-  font-family: Inter, Roboto, system-ui, sans-serif;
+  font-family: var(--font-family-base, Inter), Roboto, system-ui, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
 }
@@ -99,6 +99,10 @@ body {
 
 .ProseMirror strong {
   font-weight: 600;
+  color: inherit;
+}
+
+.cyan-bold-enabled .ProseMirror strong {
   color: var(--color-accent);
 }
 

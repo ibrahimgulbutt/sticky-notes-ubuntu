@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pin, Lock, Minimize2, Maximize2, X } from 'lucide-react';
+import { Pin, Lock, Minimize2, Maximize2, X, GripVertical } from 'lucide-react';
 import type { Note } from '../../types';
 
 interface NoteHeaderProps {
@@ -23,11 +23,14 @@ export const NoteHeader: React.FC<NoteHeaderProps> = ({
 }) => {
   return (
     <div className="flex items-center justify-between p-1.5 bg-black bg-opacity-20 drag-handle">
+      <div className="text-text-secondary mr-1 cursor-move flex-shrink-0 hover:text-text-primary transition-colors">
+         <GripVertical size={16} />
+      </div>
       <input
         type="text"
         value={note.title}
         onChange={onTitleChange}
-        className="bg-transparent text-text-primary text-sm font-medium border-none outline-none flex-1 min-w-0 no-drag"
+        className="bg-transparent text-text-primary text-sm font-medium border-none outline-none flex-1 min-w-0 no-drag mr-2"
         placeholder="Note title"
         disabled={note.locked}
       />

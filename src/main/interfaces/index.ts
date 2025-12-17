@@ -3,7 +3,7 @@ import type { Note, Settings } from '../../types';
 
 export interface IWindowManager {
   // Dashboard Window
-  createDashboardWindow(): BrowserWindow;
+  createDashboardWindow(show?: boolean): BrowserWindow;
   showDashboard(): void;
   hideDashboard(): void;
   toggleDashboard(): void;
@@ -24,6 +24,7 @@ export interface IWindowManager {
   hideAllNoteWindows(): void;
   showAllNoteWindows(): void;
   getWindowById(id: number): BrowserWindow | null;
+  broadcast(channel: string, ...args: any[]): void;
   
   // Cleanup
   cleanup(): void;
@@ -43,6 +44,7 @@ export interface INoteService {
   
   // Batch Operations
   deleteMultipleNotes(ids: string[]): Promise<void>;
+  updateNotesColor(oldColor: string, newColor: string): Promise<Note[]>;
   exportNotes(format: 'json' | 'markdown'): Promise<string>;
   importNotes(data: string, format: 'json' | 'markdown'): Promise<void>;
 }

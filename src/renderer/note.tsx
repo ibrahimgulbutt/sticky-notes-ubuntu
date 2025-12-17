@@ -20,6 +20,7 @@ import { NoteHeader } from './components/NoteHeader';
 import { NoteToolbar } from './components/NoteToolbar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useNoteStore } from './store/useNoteStore';
+import { useSettingsStore } from './store/useSettingsStore';
 
 // Debounce utility function
 function debounce<T extends (...args: any[]) => any>(
@@ -45,16 +46,16 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
   // Use Zustand store
   const { 
     note, 
-    settings, 
     isLoading, 
     isMinimized, 
     setNote, 
-    setSettings, 
     setIsLoading, 
     updateNoteLocal,
     setIsMinimized,
     toggleMinimize
   } = useNoteStore();
+
+  const { settings, init: initSettings } = useSettingsStore();
 
   const [editorContent, setEditorContent] = useState('');
   const isLoaded = useRef(false);
@@ -187,60 +188,108 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
       
       if (isLocked) {
         editor.commands.blur();
-        
-        // Add custom handler for task items
-        const handleTaskClick = (e: Event) => {
-          const target = e.target as HTMLElement;
-          if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'checkbox') {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Temporarily enable editing for checkbox toggle
-            editor.setEditable(true);
-            
-            const pos = editor.view.posAtDOM(target.closest('li') || target, 0);
-            if (pos !== -1) {
-              editor.chain().focus().command(({ tr, state, dispatch }) => {
-                const resolvedPos = state.doc.resolve(pos);
-                const node = resolvedPos.parent;
-                if (node.type.name === 'taskItem') {
-                  const newAttrs = { ...node.attrs, checked: !node.attrs.checked };
-                  if (dispatch) {
-                    tr.setNodeMarkup(resolvedPos.start() - 1, undefined, newAttrs);
-                  }
-                  return true;
-                }
-                return false;
-              }).run();
-            }
-            
-            // Re-lock immediately
-            setTimeout(() => {
-                if (editor && !editor.isDestroyed) {
-                    editor.setEditable(false);
-                }
-            }, 50);
-          }
-        };
-
-        const editorDom = editor.view.dom;
-        editorDom.addEventListener('click', handleTaskClick, true);
-        return () => {
-          editorDom.removeEventListener('click', handleTaskClick, true);
-        };
       }
+
+      // Add custom handler for task items - Apply to BOTH locked and unlocked notes
+      const handleTaskClick = (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'checkbox') {
+          // If locked, prevent interaction
+          if (note?.locked) {
+              e.preventDefault();
+              return;
+          }
+
+          // Handle completed item behavior
+          const behavior = settingsRef.current?.completedItemBehavior || 'strike';
+          
+          if (behavior === 'delete') {
+              // Delete the task item
+              e.preventDefault();
+              const pos = editor.view.posAtDOM(target.closest('li') || target, 0);
+              if (pos !== -1) {
+                  // Fix: Set selection to the item before deleting to ensure we delete the correct one
+                  editor.chain().setTextSelection(pos).deleteNode('taskItem').run();
+              }
+              return;
+          } 
+          
+          if (behavior === 'archive') {
+              // Move to bottom
+              e.preventDefault();
+              const pos = editor.view.posAtDOM(target.closest('li') || target, 0);
+              if (pos !== -1) {
+                  editor.chain().command(({ tr, state, dispatch }) => {
+                      const resolvedPos = state.doc.resolve(pos);
+                      const taskItem = resolvedPos.parent;
+                      if (taskItem.type.name !== 'taskItem') return false;
+
+                      // 1. Toggle checked status
+                      const newAttrs = { ...taskItem.attrs, checked: !taskItem.attrs.checked };
+                      
+                      // 2. Find parent list
+                      // taskItem is at depth, taskList is at depth - 1
+                      const listPos = resolvedPos.before(resolvedPos.depth);
+                      const listNode = state.doc.nodeAt(listPos);
+                      
+                      if (!listNode || listNode.type.name !== 'taskList') {
+                          // Fallback: just toggle if not in a list (shouldn't happen for taskItem)
+                          if (dispatch) {
+                              tr.setNodeMarkup(resolvedPos.before(resolvedPos.depth), undefined, newAttrs);
+                          }
+                          return true;
+                      }
+
+                      if (dispatch) {
+                          const itemStart = resolvedPos.before(resolvedPos.depth);
+                          const itemSize = taskItem.nodeSize;
+                          
+                          // Only move to bottom if we are checking it (marking as done)
+                          if (newAttrs.checked) {
+                              // Delete the item from current position
+                              tr.delete(itemStart, itemStart + itemSize);
+                              
+                              // Calculate new insertion point: end of list
+                              // The list node size has decreased by itemSize
+                              // listPos points to start of list. 
+                              // New end is listPos + (originalSize - itemSize) - 1 (for closing tag)
+                              // But tr.mapping might handle positions? 
+                              // Safer to calculate based on original doc and let transaction map it?
+                              // No, simpler: listPos is stable (before the deletion).
+                              // The list content ends at listPos + listNode.nodeSize - 1.
+                              // After deletion, it ends at listPos + listNode.nodeSize - itemSize - 1.
+                              const insertPos = listPos + listNode.nodeSize - itemSize - 1;
+                              
+                              // Create new node with updated attributes
+                              const newNode = taskItem.type.create(newAttrs, taskItem.content);
+                              tr.insert(insertPos, newNode);
+                          } else {
+                              // Just toggle if unchecking
+                              tr.setNodeMarkup(itemStart, undefined, newAttrs);
+                          }
+                      }
+                      return true;
+                  }).run();
+              }
+              return;
+          }
+
+          // Default behavior (strike) is handled by Tiptap
+        }
+      };
+
+      const editorDom = editor.view.dom;
+      editorDom.addEventListener('click', handleTaskClick, true);
+      return () => {
+        editorDom.removeEventListener('click', handleTaskClick, true);
+      };
     }
   }, [note?.locked, editor]);
 
   const loadNote = useCallback(async () => {
     if (isLoaded.current) return; // Prevent re-loading
 
-    try {
-      const appSettings = await window.electronAPI.getSettings();
-      setSettings(appSettings);
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    }
+    initSettings();
 
     if (!noteId) {
       const newNote = await window.electronAPI.createNote({});
@@ -266,11 +315,21 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
     }
     setIsLoading(false);
     isLoaded.current = true;
-  }, [noteId, setNote, setSettings, setIsLoading, playSound, settings?.soundEnabled, editor]);
+  }, [noteId, setNote, initSettings, setIsLoading, playSound, settings?.soundEnabled, editor]);
 
   useEffect(() => {
     loadNote();
   }, [loadNote]);
+
+  // Listen for note updates from main process (e.g. color change from settings)
+  useEffect(() => {
+    const cleanup = window.electronAPI.onNoteUpdated((updatedNote: Note) => {
+      if (noteRef.current && noteRef.current.id === updatedNote.id) {
+        setNote(updatedNote);
+      }
+    });
+    return cleanup;
+  }, [setNote]);
 
   useEffect(() => {
     if (settings && editor) {
@@ -281,8 +340,8 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
         editorContainer.style.whiteSpace = settings.wordWrap ? 'normal' : 'nowrap';
         editorContainer.style.overflowX = settings.wordWrap ? 'visible' : 'auto';
         editorContainer.spellcheck = settings.spellCheck;
-        editorContainer.style.fontSize = `${settings.fontSize}px`;
-        editorContainer.style.fontFamily = settings.fontFamily;
+        editorContainer.style.fontSize = `${settings.fontSize || 14}px`;
+        editorContainer.style.fontFamily = settings.fontFamily || 'Inter';
       }
     }
   }, [settings, editor]);
@@ -307,62 +366,28 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
     }
   }, [editor, note?.locked]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case 'b': e.preventDefault(); editor?.chain().focus().toggleBold().run(); break;
-          case 'i': e.preventDefault(); editor?.chain().focus().toggleItalic().run(); break;
-          case 'u': e.preventDefault(); editor?.chain().focus().toggleUnderline().run(); break;
-          case 's': if (e.shiftKey) { e.preventDefault(); editor?.chain().focus().toggleStrike().run(); } break;
-          case 'w': e.preventDefault(); window.close(); break;
-          case 'p': e.preventDefault(); handleTogglePin(); break;
-          case 'l': e.preventDefault(); handleToggleLock(); break;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editor, note]);
-
-  // Save content before window closes
-  useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (note && editor) {
-        const currentContent = editor.getHTML();
-        try {
-          await updateNote(note.id, { body: currentContent });
-        } catch (error) {
-          console.error('Failed to save on window close:', error);
-        }
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [note, editor, updateNote]);
-
-  const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
-    if (note) {
-      await updateNote(note.id, { title });
+    const currentNote = noteRef.current;
+    if (currentNote) {
+      await updateNote(currentNote.id, { title });
     }
-  };
+  }, [updateNote]);
 
-  const handleTogglePin = async () => {
-    if (note) {
-      const newPinned = !note.pinned;
-      await updateNote(note.id, { pinned: newPinned });
+  const handleTogglePin = useCallback(async () => {
+    const currentNote = noteRef.current;
+    if (currentNote) {
+      const newPinned = !currentNote.pinned;
+      await updateNote(currentNote.id, { pinned: newPinned });
       await window.electronAPI.togglePin();
       playSound('pin');
     }
-  };
+  }, [updateNote, playSound]);
 
-  const handleToggleLock = async () => {
-    if (note) {
-      const newLocked = !note.locked;
+  const handleToggleLock = useCallback(async () => {
+    const currentNote = noteRef.current;
+    if (currentNote) {
+      const newLocked = !currentNote.locked;
       
       // Force editor state immediately to ensure responsiveness
       if (editor) {
@@ -374,9 +399,7 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
       
       // Update backend
       try {
-        await window.electronAPI.updateNote(note.id, { locked: newLocked });
-        // We don't need to call toggleLock IPC as the renderer handles the state
-        // and the main process handler does nothing anyway
+        await window.electronAPI.updateNote(currentNote.id, { locked: newLocked });
       } catch (error) {
         console.error('Failed to update lock state:', error);
         // Revert on error
@@ -387,19 +410,84 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
       
       playSound('lock');
     }
-  };
+  }, [editor, updateNoteLocal, playSound]);
 
-  const handleClose = async () => {
-    if (note && editor) {
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key.toLowerCase();
+        switch (key) {
+          case 'b': 
+            e.preventDefault(); 
+            if (editor) editor.chain().focus().toggleBold().run(); 
+            break;
+          case 'i': 
+            e.preventDefault(); 
+            if (editor) editor.chain().focus().toggleItalic().run(); 
+            break;
+          case 'u': 
+            e.preventDefault(); 
+            if (editor) editor.chain().focus().toggleUnderline().run(); 
+            break;
+          case 's': 
+            if (e.shiftKey) { 
+               e.preventDefault(); 
+               if (editor) editor.chain().focus().toggleStrike().run(); 
+            }
+            break;
+          case 'n':
+            if (e.shiftKey) {
+              e.preventDefault();
+              // New Pinned Note
+              window.electronAPI.createNote({ pinned: true });
+            } else {
+              e.preventDefault();
+              // New Note
+              window.electronAPI.createNote({});
+            }
+            break;
+          case 'z': 
+            if (e.shiftKey) {
+               e.preventDefault(); if (editor) editor.chain().focus().redo().run(); 
+            } else {
+               e.preventDefault(); if (editor) editor.chain().focus().undo().run(); 
+            }
+            break;
+          case 'y': e.preventDefault(); if (editor) editor.chain().focus().redo().run(); break;
+          case 'w': e.preventDefault(); window.close(); break;
+          case 'p': e.preventDefault(); handleTogglePin(); break;
+          case 'l': e.preventDefault(); handleToggleLock(); break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editor, handleTogglePin, handleToggleLock, debouncedSave]);
+
+  const handleColorChange = useCallback(async (color: string) => {
+    const currentNote = noteRef.current;
+    if (currentNote) {
+      // Update local state immediately
+      updateNoteLocal({ color });
+      // Update backend
+      await window.electronAPI.updateNote(currentNote.id, { color });
+    }
+  }, [updateNoteLocal]);
+
+  const handleClose = useCallback(async () => {
+    const currentNote = noteRef.current;
+    if (currentNote && editor) {
       const currentContent = editor.getHTML();
       try {
-        await updateNote(note.id, { body: currentContent });
+        await updateNote(currentNote.id, { body: currentContent });
       } catch (error) {
         console.error('Failed to save content before closing:', error);
       }
     }
     window.close();
-  };
+  }, [editor, updateNote]);
 
   if (isLoading) {
     return (
@@ -433,11 +521,16 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
       />
 
       {!isMinimized && !note.locked && (
-        <NoteToolbar editor={editor} />
+        <NoteToolbar 
+          editor={editor} 
+          onColorChange={handleColorChange}
+          currentColor={note.color}
+          defaultColor={settings?.defaultNoteColor}
+        />
       )}
 
       {!isMinimized && (
-        <div className="flex-1 overflow-y-auto overflow-x-hidden no-drag">
+        <div className={`flex-1 overflow-y-auto overflow-x-hidden no-drag ${settings?.cyanBold ? 'cyan-bold-enabled' : ''}`}>
           <EditorContent
             editor={editor}
             className={`h-full no-drag ${note.locked ? 'locked' : ''}`}

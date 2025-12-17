@@ -8,13 +8,18 @@ import {
   List,
   ListOrdered,
   CheckSquare,
+  Palette,
+  RotateCcw
 } from 'lucide-react';
 
 interface NoteToolbarProps {
   editor: Editor | null;
+  onColorChange: (color: string) => void;
+  currentColor: string;
+  defaultColor?: string;
 }
 
-export const NoteToolbar: React.FC<NoteToolbarProps> = ({ editor }) => {
+export const NoteToolbar: React.FC<NoteToolbarProps> = ({ editor, onColorChange, currentColor, defaultColor = '#111214' }) => {
   if (!editor) return null;
 
   return (
@@ -89,6 +94,35 @@ export const NoteToolbar: React.FC<NoteToolbarProps> = ({ editor }) => {
         title="Task List"
       >
         <CheckSquare size={14} />
+      </button>
+
+      <div className="w-px h-4 bg-white bg-opacity-20" />
+
+      
+
+      <div className="w-px h-4 bg-white bg-opacity-20" />
+
+      <div className="relative group">
+        <button
+          className="p-1 rounded text-xs hover:bg-white hover:bg-opacity-10 text-text-secondary"
+          title="Change Note Color"
+        >
+          <Palette size={14} />
+        </button>
+        <input
+           type="color"
+           value={currentColor || '#111214'}
+           onChange={(e) => onColorChange(e.target.value)}
+           className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        />
+      </div>
+
+      <button
+        onClick={() => onColorChange(defaultColor)}
+        className="p-1 rounded text-xs hover:bg-white hover:bg-opacity-10 text-text-secondary"
+        title="Reset Color"
+      >
+        <RotateCcw size={14} />
       </button>
     </div>
   );
