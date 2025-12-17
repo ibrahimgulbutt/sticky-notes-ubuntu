@@ -62,13 +62,6 @@ Sticky Notes is a lightweight yet powerful desktop application designed to help 
 1.  **Download**: Get the latest installer (`Sticky Notes Setup 1.0.0.exe`) from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
 2.  **Install**: Double-click the `.exe` file. The app will install and launch automatically.
 
-### 🍎 macOS
-1.  **Download**: Get the latest archive (`Sticky Notes-1.0.0-mac.zip`) from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
-2.  **Install**:
-    *   Unzip the file.
-    *   Drag `Sticky Notes.app` to your **Applications** folder.
-    *   *Note: You may need to right-click and select "Open" to bypass security warnings for unsigned apps.*
-
 ### 🐧 Linux (Ubuntu/Debian)
 **Option 1: .deb Package (Recommended)**
 1.  **Download**: Get the `.deb` file (`sticky-notes-electron_1.0.0_amd64.deb`) from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
@@ -81,6 +74,14 @@ Sticky Notes is a lightweight yet powerful desktop application designed to help 
 **Option 2: AppImage (Portable)**
 1.  **Download**: Get the `.AppImage` file.
 2.  **Run**: Right-click → Properties → Permissions → Allow executing file as program. Then double-click to run.
+   
+### 🍎 macOS
+1.  **Download**: Get the latest archive (`Sticky Notes-1.0.0-mac.zip`) from the [Releases Page](https://github.com/ibrahimgulbutt/sticky-notes-ubuntu/releases).
+2.  **Install**:
+    *   Unzip the file.
+    *   Drag `Sticky Notes.app` to your **Applications** folder.
+    *   *Note: You may need to right-click and select "Open" to bypass security warnings for unsigned apps.*
+
 
 ## 🛠️ Build from Source
 
