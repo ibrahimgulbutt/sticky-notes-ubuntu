@@ -98,10 +98,6 @@ export const NoteToolbar: React.FC<NoteToolbarProps> = ({ editor, onColorChange,
 
       <div className="w-px h-4 bg-white bg-opacity-20" />
 
-      
-
-      <div className="w-px h-4 bg-white bg-opacity-20" />
-
       <div className="relative group">
         <button
           className="p-1 rounded text-xs hover:bg-white hover:bg-opacity-10 text-text-secondary"
