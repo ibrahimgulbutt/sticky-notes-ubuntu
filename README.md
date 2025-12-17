@@ -39,19 +39,6 @@ The application runs entirely offline and stores all data locally, ensuring priv
 
 ---
 
-### macOS
-
-1. Download `Sticky Notes-1.0.0-mac.zip` from the **Releases** page.
-2. Extract the archive.
-3. Drag **Sticky Notes.app** into your **Applications** folder.
-
-> **Security Notice**
-> This app is not currently signed with an Apple Developer certificate. If macOS blocks it:
->
-> * Right-click the app → **Open**
-> * Confirm by clicking **Open** again
-
----
 
 ### Linux (Ubuntu / Debian)
 
@@ -76,6 +63,20 @@ chmod +x Sticky-Notes.AppImage
 ```bash
 ./Sticky-Notes.AppImage
 ```
+
+---
+
+### macOS
+
+1. Download `Sticky Notes-1.0.0-mac.zip` from the **Releases** page.
+2. Extract the archive.
+3. Drag **Sticky Notes.app** into your **Applications** folder.
+
+> **Security Notice**
+> This app is not currently signed with an Apple Developer certificate. If macOS blocks it:
+>
+> * Right-click the app → **Open**
+> * Confirm by clicking **Open** again
 
 ---
 
