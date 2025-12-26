@@ -2,14 +2,17 @@ import { ipcMain, BrowserWindow, dialog } from 'electron';
 import { writeFile, readFile } from 'fs/promises';
 import type { INoteService, IWindowManager } from '../interfaces';
 import type { Note, Settings } from '../../types';
+import { FocusManager } from '../managers/FocusManager';
 
 export class IPCHandlers {
   private noteService: INoteService;
   private windowManager: IWindowManager;
+  private focusManager: FocusManager;
 
-  constructor(noteService: INoteService, windowManager: IWindowManager) {
+  constructor(noteService: INoteService, windowManager: IWindowManager, focusManager: FocusManager) {
     this.noteService = noteService;
     this.windowManager = windowManager;
+    this.focusManager = focusManager;
     this.registerHandlers();
   }
 
@@ -141,6 +144,35 @@ export class IPCHandlers {
         console.error('Import failed:', error);
         throw error;
       }
+    });
+
+    // Focus Widget
+    ipcMain.on('focus:start', (_, duration, mode) => {
+      this.focusManager.startSession(duration, mode);
+    });
+
+    ipcMain.on('focus:pause', () => {
+      this.focusManager.pauseSession();
+    });
+
+    ipcMain.on('focus:resume', () => {
+      this.focusManager.resumeSession();
+    });
+
+    ipcMain.on('focus:stop', () => {
+      this.focusManager.stopSession();
+    });
+
+    ipcMain.on('focus:hide', () => {
+      this.focusManager.hideWidget();
+    });
+
+    ipcMain.on('focus:show', () => {
+      this.focusManager.showWidget();
+    });
+
+    ipcMain.handle('focus:get-state', () => {
+      return this.focusManager.getSession();
     });
   }
 

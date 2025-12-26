@@ -1,9 +1,9 @@
 import React from 'react';
-import { Palette, Zap, Keyboard, Database } from 'lucide-react';
+import { Palette, Zap, Keyboard, Database, Clock } from 'lucide-react';
 
 interface SettingsSidebarProps {
-  activeTab: 'appearance' | 'behavior' | 'shortcuts' | 'data';
-  setActiveTab: (tab: 'appearance' | 'behavior' | 'shortcuts' | 'data') => void;
+  activeTab: 'appearance' | 'behavior' | 'shortcuts' | 'data' | 'focus';
+  setActiveTab: (tab: 'appearance' | 'behavior' | 'shortcuts' | 'data' | 'focus') => void;
 }
 
 export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ activeTab, setActiveTab }) => {
@@ -11,7 +11,8 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ activeTab, set
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'behavior', label: 'Behavior', icon: Zap },
     { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
-    { id: 'data', label: 'Data', icon: Database }
+    { id: 'data', label: 'Data', icon: Database },
+    { id: 'focus', label: 'Focus', icon: Clock }
   ] as const;
 
   return (

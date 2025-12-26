@@ -45,6 +45,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportNotes: (format: 'json' | 'markdown') => ipcRenderer.invoke('export:notes', format),
   importNotes: () => ipcRenderer.invoke('import:notes'),
 
+  // Focus Widget
+  startFocus: (duration: number, mode: string) => ipcRenderer.send('focus:start', duration, mode),
+  pauseFocus: () => ipcRenderer.send('focus:pause'),
+  resumeFocus: () => ipcRenderer.send('focus:resume'),
+  stopFocus: () => ipcRenderer.send('focus:stop'),
+  hideFocusWidget: () => ipcRenderer.send('focus:hide'),
+  showFocusWidget: () => ipcRenderer.send('focus:show'),
+  getFocusState: () => ipcRenderer.invoke('focus:get-state'),
+  onFocusUpdate: (callback: (remaining: number, state: string) => void) => {
+    const listener = (_: any, remaining: number, state: string) => callback(remaining, state);
+    ipcRenderer.on('focus:update-timer', listener);
+    return () => ipcRenderer.removeListener('focus:update-timer', listener);
+  },
+
   // Event listeners
   onLockStateChanged: (callback: (data: { noteId: string; locked: boolean }) => void) => {
     const listener = (event: any, data: { noteId: string; locked: boolean }) => callback(data);

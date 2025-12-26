@@ -27,6 +27,16 @@ declare global {
       exportNotes: (format: 'json' | 'markdown') => Promise<void>;
       importNotes: () => Promise<void>;
 
+      // Focus Widget
+      startFocus: (duration: number, mode: string) => void;
+      pauseFocus: () => void;
+      resumeFocus: () => void;
+      stopFocus: () => void;
+      hideFocusWidget: () => void;
+      showFocusWidget: () => void;
+      getFocusState: () => Promise<any>;
+      onFocusUpdate: (callback: (remaining: number, state: string) => void) => () => void;
+
       // Event listeners
       onLockStateChanged: (callback: (data: { noteId: string; locked: boolean }) => void) => () => void;
       onSettingsUpdated: (callback: (settings: Settings) => void) => () => void;

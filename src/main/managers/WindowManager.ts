@@ -7,6 +7,7 @@ export class WindowManager implements IWindowManager {
   private windows: Map<number, BrowserWindow> = new Map();
   private dashboardWindow: BrowserWindow | null = null;
   private settingsWindow: BrowserWindow | null = null;
+  private focusWindow: BrowserWindow | null = null;
   private noteWindows: Map<string, BrowserWindow> = new Map();
   private isQuitting = false;
 
@@ -156,6 +157,78 @@ export class WindowManager implements IWindowManager {
   closeSettingsWindow(): void {
     if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
       this.settingsWindow.close();
+    }
+  }
+
+  // Focus Window Management
+  createFocusWindow(): BrowserWindow {
+    if (this.focusWindow && !this.focusWindow.isDestroyed()) {
+      this.focusWindow.show();
+      this.focusWindow.focus();
+      return this.focusWindow;
+    }
+
+    this.focusWindow = new BrowserWindow({
+      width: 300,
+      height: 300,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: join(__dirname, '../preload.js'),
+      },
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: true,
+      hasShadow: false,
+      // Removed type: 'utility' to fix dragging on Linux
+      // type: 'utility', 
+      icon: this.getIconPath(),
+    });
+
+    // Ensure mouse events work on transparent window
+    this.focusWindow.setIgnoreMouseEvents(false);
+
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      this.focusWindow.loadURL('http://localhost:3000/focus.html');
+    } else {
+      this.focusWindow.loadFile(join(__dirname, '../../renderer/focus.html'));
+    }
+
+    this.focusWindow.on('closed', () => {
+      if (this.focusWindow) {
+        this.windows.delete(this.focusWindow.id);
+      }
+      this.focusWindow = null;
+    });
+
+    this.windows.set(this.focusWindow.id, this.focusWindow);
+    return this.focusWindow;
+  }
+
+  getFocusWindow(): BrowserWindow | null {
+    return this.focusWindow;
+  }
+
+  closeFocusWindow(): void {
+    if (this.focusWindow && !this.focusWindow.isDestroyed()) {
+      this.focusWindow.close();
+    }
+  }
+
+  hideFocusWindow(): void {
+    if (this.focusWindow && !this.focusWindow.isDestroyed()) {
+      this.focusWindow.hide();
+    }
+  }
+
+  showFocusWindow(): void {
+    if (this.focusWindow && !this.focusWindow.isDestroyed()) {
+      this.focusWindow.show();
+    } else {
+      this.createFocusWindow();
     }
   }
 

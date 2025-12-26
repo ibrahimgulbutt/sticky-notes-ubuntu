@@ -16,6 +16,7 @@ import { TrayManager } from './managers/TrayManager';
 import { NoteService } from './services/NoteService';
 import { IPCHandlers } from './handlers/IPCHandlers';
 import { SettingsManager } from './managers/SettingsManager';
+import { FocusManager } from './managers/FocusManager';
 
 class StickyNotesApp {
   private store: Store<{notes: Note[], settings: Settings}>;
@@ -24,6 +25,7 @@ class StickyNotesApp {
   private noteService: NoteService;
   private ipcHandlers: IPCHandlers;
   private settingsManager: SettingsManager;
+  private focusManager: FocusManager;
 
   constructor() {
     // Set App User Model ID for Windows and Linux
@@ -60,6 +62,7 @@ class StickyNotesApp {
           maxBackups: 10,
           cyanBold: true,
           dashboardSortBy: 'updated',
+          focusDuration: 25,
           shortcuts: {
             newNote: 'Ctrl+N'
           }
@@ -72,7 +75,8 @@ class StickyNotesApp {
     this.noteService = new NoteService(this.store, this.settingsManager);
     this.windowManager = new WindowManager();
     this.trayManager = new TrayManager();
-    this.ipcHandlers = new IPCHandlers(this.noteService, this.windowManager);
+    this.focusManager = new FocusManager(this.windowManager, this.trayManager);
+    this.ipcHandlers = new IPCHandlers(this.noteService, this.windowManager, this.focusManager);
 
     // Make this app a single instance app
     const gotTheLock = app.requestSingleInstanceLock();
@@ -144,6 +148,30 @@ class StickyNotesApp {
       toggleAllNotes: () => this.toggleAllNotes(),
       openSettings: () => this.windowManager.createSettingsWindow(),
       quit: () => this.quit(),
+    });
+
+    // Set up focus action callbacks
+    this.trayManager.setFocusActionCallback((action) => {
+      switch (action) {
+        case 'pause':
+          this.focusManager.pauseSession();
+          break;
+        case 'resume':
+          this.focusManager.resumeSession();
+          break;
+        case 'stop':
+          this.focusManager.stopSession();
+          break;
+      }
+    });
+
+    // Set up dashboard action callbacks
+    this.trayManager.setDashboardActionCallback((action) => {
+      if (action === 'show') {
+        this.windowManager.showDashboard();
+      } else {
+        this.windowManager.hideDashboard();
+      }
     });
 
     // FIXED: Tray click behavior - toggle dashboard

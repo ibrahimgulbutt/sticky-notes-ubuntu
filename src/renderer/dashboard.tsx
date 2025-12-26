@@ -18,6 +18,8 @@ import {
 import type { Note, Settings as AppSettings } from '../types';
 import './styles.css';
 import { useSettingsStore } from './store/useSettingsStore';
+import { FocusSetupModal } from './components/FocusSetupModal';
+import { ActiveSessionModal } from './components/ActiveSessionModal';
 
 // Utility function for date formatting
 function formatDate(dateString: string): string {
@@ -119,6 +121,8 @@ const DashboardApp: React.FC = () => {
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated');
   const [isScrollable, setIsScrollable] = useState(false);
   const [infoNote, setInfoNote] = useState<Note | null>(null);
+  const [showFocusSetup, setShowFocusSetup] = useState(false);
+  const [showActiveSession, setShowActiveSession] = useState(false);
 
   const loadNotes = useCallback(async () => {
     const allNotes = await window.electronAPI.getAllNotes();
@@ -281,16 +285,47 @@ const DashboardApp: React.FC = () => {
         <InfoModal note={infoNote} onClose={() => setInfoNote(null)} />
       )}
 
+      {showFocusSetup && (
+        <FocusSetupModal 
+          onClose={() => setShowFocusSetup(false)}
+          onStart={(duration, mode) => window.electronAPI.startFocus(duration, mode)}
+        />
+      )}
+
+      {showActiveSession && (
+        <ActiveSessionModal onClose={() => setShowActiveSession(false)} />
+      )}
+
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-matte-border">
+      <div 
+        className="flex items-center justify-between p-4 border-b border-matte-border"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      >
         <h1 className="text-lg font-semibold text-text-primary">Sticky Notes</h1>
-        <div className="flex items-center space-x-2">
+        <div 
+          className="flex items-center space-x-2"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
           <button
             onClick={() => createNewNote(false)}
             className="p-2 hover:bg-matte-light rounded-lg transition-colors"
             title="New Note (Ctrl+N)"
           >
             <Plus size={18} className="text-cyan-accent" />
+          </button>
+          <button
+            onClick={async () => {
+              const state = await window.electronAPI.getFocusState();
+              if (state && state.isActive) {
+                setShowActiveSession(true);
+              } else {
+                setShowFocusSetup(true);
+              }
+            }}
+            className="p-2 hover:bg-matte-light rounded-lg transition-colors"
+            title="Focus Session"
+          >
+            <span className="text-lg">🍅</span>
           </button>
           <button
             onClick={handleOpenSettings}

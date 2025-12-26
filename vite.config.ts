@@ -14,6 +14,7 @@ export default defineConfig({
         main: resolve(__dirname, 'src/renderer/index.html'),
         dashboard: resolve(__dirname, 'src/renderer/dashboard.html'),
         settings: resolve(__dirname, 'src/renderer/settings.html'),
+        focus: resolve(__dirname, 'src/renderer/focus.html'),
       }
     }
   },

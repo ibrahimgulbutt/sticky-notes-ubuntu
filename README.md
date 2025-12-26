@@ -25,6 +25,7 @@ Sticky Notes is a lightweight yet powerful desktop application designed to help 
 
 *   **🎨 Modern Design**: Beautiful matte dark interface with cyan accents, designed to be easy on the eyes.
 *   **📝 Rich Text Editor**: Full support for **bold**, *italic*, lists, checklists, and more.
+*   **🍅 Focus Mode**: Built-in Pomodoro-style timer with beautiful, calming visualizations (Plant & Blob) to help you stay productive.
 *   **📊 Central Dashboard**: A unified view to manage, search, and filter all your notes in one place.
 *   **📌 Smart Organization**: 
     *   **Pin** important notes to keep them at the top.

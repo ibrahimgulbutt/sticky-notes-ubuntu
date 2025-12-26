@@ -64,6 +64,7 @@ export interface Settings {
   maxBackups: number;
   cyanBold: boolean;
   dashboardSortBy: 'updated' | 'created' | 'title';
+  focusDuration: number; // in minutes
   shortcuts: {
     newNote: string;
   };
@@ -76,7 +77,7 @@ export interface AppState {
   dashboardVisible: boolean;
 }
 
-export type WindowType = 'dashboard' | 'note' | 'settings';
+export type WindowType = 'dashboard' | 'note' | 'settings' | 'focus';
 
 export interface WindowData {
   type: WindowType;
@@ -115,4 +116,23 @@ export interface IpcEvents {
   'tray:create-pinned-note': () => void;
   'tray:toggle-visibility': () => void;
   'tray:quit': () => void;
+
+  // Focus Widget
+  'focus:start': (duration: number, mode: FocusMode) => void;
+  'focus:pause': () => void;
+  'focus:resume': () => void;
+  'focus:stop': () => void;
+  'focus:get-state': () => FocusSession;
+}
+
+export type FocusMode = 'plant' | 'blob';
+export type TimerState = 'idle' | 'running' | 'paused' | 'completed';
+
+export interface FocusSession {
+  isActive: boolean;
+  startTime: number | null;
+  duration: number; // in minutes
+  remaining: number; // in seconds
+  mode: FocusMode;
+  state: TimerState;
 }

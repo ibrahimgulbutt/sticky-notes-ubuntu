@@ -13,12 +13,13 @@ import { AppearanceSettings } from './components/settings/AppearanceSettings';
 import { BehaviorSettings } from './components/settings/BehaviorSettings';
 import { ShortcutSettings } from './components/settings/ShortcutSettings';
 import { DataSettings } from './components/settings/DataSettings';
+import { FocusSettings } from './components/settings/FocusSettings';
 import { useSettingsStore } from './store/useSettingsStore';
 
 const SettingsApp: React.FC = () => {
   const { settings: storeSettings, updateSettings: updateStoreSettings, init: initSettings } = useSettingsStore();
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [activeTab, setActiveTab] = useState<'appearance' | 'behavior' | 'shortcuts' | 'data'>('appearance');
+  const [activeTab, setActiveTab] = useState<'appearance' | 'behavior' | 'shortcuts' | 'data' | 'focus'>('appearance');
   const [tempSettings, setTempSettings] = useState<AppSettings | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -183,6 +184,10 @@ const SettingsApp: React.FC = () => {
 
             {activeTab === 'data' && (
               <DataSettings settings={tempSettings} updateSetting={updateTempSetting} />
+            )}
+
+            {activeTab === 'focus' && (
+              <FocusSettings settings={tempSettings} onChange={updateTempSetting} />
             )}
           </div>
 

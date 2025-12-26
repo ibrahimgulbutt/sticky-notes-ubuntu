@@ -6,6 +6,15 @@ export class TrayManager implements ITrayManager {
   private tray: Tray | null = null;
   private onClickCallback: (() => void) | null = null;
   private onRightClickCallback: (() => void) | null = null;
+  private callbacks: {
+    newNote: () => void;
+    newPinnedNote: () => void;
+    showDashboard: () => void;
+    hideDashboard: () => void;
+    toggleAllNotes: () => void;
+    openSettings: () => void;
+    quit: () => void;
+  } | null = null;
 
   private getIconPath(): string {
     if (app.isPackaged) {
@@ -39,66 +48,109 @@ export class TrayManager implements ITrayManager {
     });
   }
 
-  updateTrayMenu(): void {
+  updateTrayMenu(focusState?: { isActive: boolean; isPaused: boolean }): void {
     if (!this.tray) return;
 
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: 'New Note',
-        accelerator: 'CommandOrControl+N',
-        click: () => {
-          // This will be connected to the app's note creation method
-        },
-      },
-      {
-        label: 'New Pinned Note',
-        accelerator: 'CommandOrControl+Shift+N',
-        click: () => {
-          // This will be connected to the app's pinned note creation method
-        },
-      },
-      { type: 'separator' },
-      {
-        label: 'Show Dashboard',
-        click: () => {
-          // This will be connected to the window manager's show dashboard
-        },
-      },
-      {
-        label: 'Hide Dashboard',
-        click: () => {
-          // This will be connected to the window manager's hide dashboard
-        },
-      },
-      {
-        label: 'Toggle All Notes',
-        click: () => {
-          // This will be connected to the window manager's toggle notes
-        },
-      },
-      { type: 'separator' },
-      {
-        label: 'Settings',
-        click: () => {
-          // This will be connected to the settings window
-        },
-      },
-      { type: 'separator' },
-      {
-        label: 'Quit',
-        accelerator: 'CommandOrControl+Q',
-        click: () => {
-          // This will be connected to the app's quit method
-        },
-      },
-    ]);
+    const menuItems: Electron.MenuItemConstructorOptions[] = [];
 
+    if (this.callbacks) {
+      menuItems.push(
+        {
+          label: 'New Note',
+          accelerator: 'CommandOrControl+N',
+          click: this.callbacks.newNote,
+        },
+        {
+          label: 'New Pinned Note',
+          accelerator: 'CommandOrControl+Shift+N',
+          click: this.callbacks.newPinnedNote,
+        },
+        { type: 'separator' }
+      );
+    }
+
+    // Removed dynamic focus controls to prevent menu rebuilding glitches
+    // Focus controls are available in the widget itself
+
+    if (this.callbacks) {
+      menuItems.push(
+        {
+          label: 'Show Dashboard',
+          click: this.callbacks.showDashboard,
+        },
+        {
+          label: 'Hide Dashboard',
+          click: this.callbacks.hideDashboard,
+        },
+        {
+          label: 'Toggle All Notes',
+          click: this.callbacks.toggleAllNotes,
+        },
+        { type: 'separator' },
+        {
+          label: 'Settings',
+          click: this.callbacks.openSettings,
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          accelerator: 'CommandOrControl+Q',
+          click: this.callbacks.quit,
+        },
+      );
+    } else {
+      // Fallback if callbacks are not set yet
+      menuItems.push({
+        label: 'Quit',
+        click: () => app.quit()
+      });
+    }
+
+    const contextMenu = Menu.buildFromTemplate(menuItems);
     this.tray.setContextMenu(contextMenu);
   }
 
+  private onFocusActionCallback: ((action: 'pause' | 'resume' | 'stop') => void) | null = null;
+  private onDashboardActionCallback: ((action: 'show' | 'hide') => void) | null = null;
+
+  setFocusActionCallback(callback: (action: 'pause' | 'resume' | 'stop') => void) {
+    this.onFocusActionCallback = callback;
+  }
+
+  setDashboardActionCallback(callback: (action: 'show' | 'hide') => void) {
+    this.onDashboardActionCallback = callback;
+  }
+
+  private lastTooltip: string = '';
+
   updateTrayTooltip(text: string): void {
-    if (this.tray) {
+    if (this.tray && this.lastTooltip !== text) {
       this.tray.setToolTip(text);
+      this.lastTooltip = text;
+    }
+  }
+
+  private lastFocusState: { isActive: boolean; isPaused: boolean } | null = null;
+
+  updateFocusState(isActive: boolean, isPaused: boolean, remainingTime?: string): void {
+    // Only update menu if state changed
+    // Since we removed dynamic menu items, we might not need to call updateTrayMenu at all here
+    // unless we want to re-enable them later. For now, we'll skip menu updates to be safe.
+    /*
+    if (
+      !this.lastFocusState ||
+      this.lastFocusState.isActive !== isActive ||
+      this.lastFocusState.isPaused !== isPaused
+    ) {
+      this.updateTrayMenu({ isActive, isPaused });
+      this.lastFocusState = { isActive, isPaused };
+    }
+    */
+    
+    if (isActive) {
+      this.updateTrayTooltip(`Focus: ${isPaused ? 'Paused' : 'Running'}`);
+    } else {
+      this.updateTrayTooltip('Sticky Notes');
     }
   }
 
@@ -128,45 +180,7 @@ export class TrayManager implements ITrayManager {
     openSettings: () => void;
     quit: () => void;
   }): void {
-    if (!this.tray) return;
-
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: 'New Note',
-        accelerator: 'CommandOrControl+N',
-        click: callbacks.newNote,
-      },
-      {
-        label: 'New Pinned Note',
-        accelerator: 'CommandOrControl+Shift+N',
-        click: callbacks.newPinnedNote,
-      },
-      { type: 'separator' },
-      {
-        label: 'Show Dashboard',
-        click: callbacks.showDashboard,
-      },
-      {
-        label: 'Hide Dashboard',
-        click: callbacks.hideDashboard,
-      },
-      {
-        label: 'Toggle All Notes',
-        click: callbacks.toggleAllNotes,
-      },
-      { type: 'separator' },
-      {
-        label: 'Settings',
-        click: callbacks.openSettings,
-      },
-      { type: 'separator' },
-      {
-        label: 'Quit',
-        accelerator: 'CommandOrControl+Q',
-        click: callbacks.quit,
-      },
-    ]);
-
-    this.tray.setContextMenu(contextMenu);
+    this.callbacks = callbacks;
+    this.updateTrayMenu();
   }
 }
