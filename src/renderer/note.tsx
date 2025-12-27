@@ -303,6 +303,12 @@ const NoteApp: React.FC<NoteAppProps> = ({ noteId }) => {
       if (existingNote) {
         setNote(existingNote);
         setEditorContent(existingNote.body || '');
+        
+        // Sync window state with note state
+        if (existingNote.pinned) {
+          window.electronAPI.setPin(true);
+        }
+
         // If editor exists, set content immediately
         if (editor) {
             editor.commands.setContent(existingNote.body || '');

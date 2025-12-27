@@ -70,6 +70,15 @@ export class IPCHandlers {
       }
     });
 
+    ipcMain.handle('window:set-pin-current', async (event, shouldPin: boolean) => {
+      const webContents = event.sender;
+      const window = BrowserWindow.fromWebContents(webContents);
+      if (window) {
+        window.setAlwaysOnTop(shouldPin);
+        window.setSkipTaskbar(shouldPin);
+      }
+    });
+
     ipcMain.handle('window:toggle-lock-current', async (event) => {
       const webContents = event.sender;
       const window = BrowserWindow.fromWebContents(webContents);

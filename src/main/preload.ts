@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return ipcRenderer.invoke('window:toggle-pin-current');
     }
   },
+  setPin: (shouldPin: boolean) => ipcRenderer.invoke('window:set-pin-current', shouldPin),
   toggleLock: (windowId?: number) => {
     if (windowId) {
       return ipcRenderer.invoke('window:toggle-lock', windowId);

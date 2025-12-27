@@ -15,6 +15,7 @@ declare global {
       createNoteWindow: (noteId?: string) => Promise<number>;
       closeWindow: (windowId: number) => Promise<void>;
       togglePin: (windowId?: number) => Promise<void>;
+      setPin: (shouldPin: boolean) => Promise<void>;
       toggleLock: (windowId?: number) => Promise<void>;
       openSettings: () => Promise<void>;
       getCurrentWindowId: () => Promise<number | null>;
